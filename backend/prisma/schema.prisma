@@ -1,0 +1,374 @@
+// Prisma Schema for Social Media CRM
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  ACCOUNT_MANAGER
+  WRITER
+  DESIGNER
+  POST_SCHEDULER
+  CLIENT_VIEWER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ContentType {
+  STATIC
+  VIDEO
+  STORY
+  REEL
+  CAROUSEL
+  BLOG_POST
+}
+
+enum CalendarStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+model User {
+  id                String    @id @default(cuid())
+  email             String    @unique
+  password          String
+  firstName         String
+  lastName          String
+  avatar            String?      // Added avatar field for user profile pictures
+  mobileNumber      String?      // Added mobile number field for WhatsApp integration
+  whatsAppNumber    String?
+  role              UserRole  @default(CLIENT_VIEWER)
+  isActive          Boolean   @default(true)
+  teamId            String?
+  joinDate          DateTime  @default(now())
+  deletedAt         DateTime?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  assignedTasks     Task[]           @relation("AssignedTasks")
+  createdTasks      Task[]           @relation("CreatedTasks")
+  comments          Comment[]
+  notifications     Notification[]
+  activityLogs      ActivityLog[]
+  brandAccess       BrandUser[]
+  team              Team?            @relation("TeamMembers", fields: [teamId], references: [id])      // Added team relations
+  ledTeams          Team[]           @relation("TeamLeader")
+  sentMessages      ChatMessage[]    @relation("SentMessages")      // Added chat relations
+  chatRoomMembers   ChatRoomMember[]
+  readReceipts      ReadReceipt[]
+  reactions         MessageReaction[] // Added reactions relation
+
+  @@index([email])
+  @@index([role])
+  @@index([teamId])      // Added team index for faster queries
+}
+
+model Brand {
+  id          String   @id @default(cuid())
+  name        String
+  logo        String?      // Already exists, kept for logo support
+  description String?
+  isActive    Boolean  @default(true)
+  deletedAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  tasks       Task[]
+  users       BrandUser[]
+  calendars   Calendar[]
+
+  @@index([name])
+}
+
+model BrandUser {
+  id        String   @id @default(cuid())
+  brandId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  brand Brand @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([brandId, userId])
+  @@index([brandId])
+  @@index([userId])
+}
+
+model Task {
+  id              String       @id @default(cuid())
+  title           String
+  description     String?
+  references      String?      // Added references field for task details
+  status          TaskStatus   @default(TODO)
+  priority        TaskPriority @default(MEDIUM)
+  dueDate         DateTime?
+  brandId         String
+  assignedToId    String?
+  createdById     String
+  calendarId      String?
+  postingDate     DateTime?
+  contentType     ContentType?
+  referenceUpload String?
+  finalUpload     String?
+  notes           String?
+  textContent     String?
+  deletedAt       DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  // Relations
+  brand       Brand        @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  assignedTo  User?        @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  createdBy   User         @relation("CreatedTasks", fields: [createdById], references: [id])
+  calendar    Calendar?    @relation(fields: [calendarId], references: [id], onDelete: SetNull)
+  comments    Comment[]
+  attachments Attachment[]
+
+  @@index([brandId])
+  @@index([assignedToId])
+  @@index([createdById])
+  @@index([status])
+  @@index([dueDate])
+  @@index([calendarId])
+  @@index([postingDate])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  taskId    String
+  userId    String
+  mentions  String[] @default([])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([userId])
+}
+
+model Attachment {
+  id          String   @id @default(cuid())
+  fileName    String
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  description String?
+  taskId      String
+  createdAt   DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  userId    String
+  type      String?  // Added notification type and channels for tracking
+  sentVia   String[] @default([]) // Array of channels: EMAIL, WHATSAPP, IN_APP
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  userId    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([entity])
+  @@index([createdAt])
+}
+
+model Calendar {
+  id          String         @id @default(cuid())
+  brandId     String
+  month       Int            // 1-12
+  year        Int
+  status      CalendarStatus @default(DRAFT)
+  createdById String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relations
+  brand       Brand          @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  scopes      CalendarScope[]
+  tasks       Task[]
+
+  @@unique([brandId, month, year])
+  @@index([brandId])
+  @@index([month, year])
+}
+
+model CalendarScope {
+  id          String      @id @default(cuid())
+  calendarId  String
+  contentType ContentType
+  quantity    Int
+  completed   Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  calendar    Calendar    @relation(fields: [calendarId], references: [id], onDelete: Cascade)
+
+  @@unique([calendarId, contentType])
+  @@index([calendarId])
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  leaderId    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  leader      User?    @relation("TeamLeader", fields: [leaderId], references: [id])
+  members     User[]   @relation("TeamMembers")
+
+  @@index([leaderId])
+}
+
+model ChatRoom {
+  id          String           @id @default(cuid())
+  name        String?
+  isGroup     Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  members     ChatRoomMember[]
+  messages    ChatMessage[]
+
+  @@index([isGroup])
+}
+
+model ChatRoomMember {
+  id          String    @id @default(cuid())
+  chatRoomId  String
+  userId      String
+  joinedAt    DateTime  @default(now())
+  isTyping    Boolean   @default(false)
+  lastSeen    DateTime  @default(now())
+
+  // Relations
+  chatRoom    ChatRoom  @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([chatRoomId, userId])
+  @@index([chatRoomId])
+  @@index([userId])
+}
+
+model ChatMessage {
+  id          String    @id @default(cuid())
+  chatRoomId  String
+  senderId    String
+  content     String
+  isEdited    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  chatRoom    ChatRoom  @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  sender      User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  readReceipts ReadReceipt[]
+  media       ChatMedia[]    // Added media relation
+  reactions   MessageReaction[] // Added reactions relation
+
+  @@index([chatRoomId])
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+model ReadReceipt {
+  id          String      @id @default(cuid())
+  messageId   String
+  userId      String
+  readAt      DateTime    @default(now())
+
+  // Relations
+  message     ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
+}
+
+model ChatMedia {
+  id          String      @id @default(cuid())
+  messageId   String
+  type        String      // "IMAGE", "FILE", "AUDIO", "VIDEO"
+  url         String
+  fileName    String?
+  fileSize    Int?
+  mimeType    String?
+  createdAt   DateTime    @default(now())
+
+  // Relations
+  message     ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+model MessageReaction {
+  id          String      @id @default(cuid())
+  messageId   String
+  userId      String
+  emoji       String
+  createdAt   DateTime    @default(now())
+
+  // Relations
+  message     ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+  @@index([userId])
+}
