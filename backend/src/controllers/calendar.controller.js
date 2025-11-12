@@ -92,7 +92,7 @@ export const getCalendarById = async (req, res, next) => {
               },
             },
           },
-          orderBy: { postingDate: "asc" },
+          orderBy: { publishDate: "asc" },  // ✅ Changed from publishDate to publishDate
         },
       },
     })
@@ -350,11 +350,11 @@ export const generateTasks = async (req, res, next) => {
       const randomDates = getRandomWeekdayDates(monthStart, monthEnd, tasksToCreate)
 
       for (let i = 0; i < randomDates.length; i++) {
-        const postingDate = randomDates[i]
-        const dayOfWeek = postingDate.getDay()
+        const publishDate = randomDates[i]
+        const dayOfWeek = publishDate.getDay()
 
         if (dayOfWeek === 0 || dayOfWeek === 6) {
-          console.error(`[v0] ERROR: Generated date ${postingDate} is a weekend!`)
+          console.error(`[v0] ERROR: Generated date ${publishDate} is a weekend!`)
           continue
         }
 
@@ -367,8 +367,8 @@ export const generateTasks = async (req, res, next) => {
             brandId: calendar.brandId,
             calendarId: calendar.id,
             contentType,
-            postingDate,
-            dueDate: new Date(postingDate.getTime() - 2 * 24 * 60 * 60 * 1000),
+            publishDate,
+            dueDate: new Date(publishDate.getTime() - 2 * 24 * 60 * 60 * 1000),
             createdById: req.user.id,
           },
           include: {
@@ -377,7 +377,7 @@ export const generateTasks = async (req, res, next) => {
         })
 
         createdTasks.push(task)
-        console.log(`[v0] Created task #${existingTasksOfType + i + 1} for ${format(postingDate, "EEEE, MMM d")}`)
+        console.log(`[v0] Created task #${existingTasksOfType + i + 1} for ${format(publishDate, "EEEE, MMM d")}`)
       }
     }
 
@@ -410,13 +410,13 @@ export const generateTasks = async (req, res, next) => {
 export const updateTaskDate = async (req, res, next) => {
   try {
     const { taskId } = req.params
-    const { postingDate } = req.body
+    const { publishDate } = req.body
 
-    if (!postingDate) {
+    if (!publishDate) {
       return res.status(400).json({ message: "Posting date is required" })
     }
 
-    const newDate = new Date(postingDate)
+    const newDate = new Date(publishDate)
     const dayOfWeek = newDate.getDay()
 
     // Prevent assigning to weekend
@@ -427,7 +427,7 @@ export const updateTaskDate = async (req, res, next) => {
     const task = await prisma.task.update({
       where: { id: taskId },
       data: {
-        postingDate: newDate,
+        publishDate: newDate,
         dueDate: new Date(newDate.getTime() - 2 * 24 * 60 * 60 * 1000), // Update due date accordingly
       },
       include: {
@@ -449,9 +449,9 @@ export const updateTaskDate = async (req, res, next) => {
         entityId: task.id,
         userId: req.user.id,
         metadata: {
-          field: "postingDate",
+          field: "publishDate",
           oldValue: null,
-          newValue: postingDate,
+          newValue: publishDate,
         },
       },
     })

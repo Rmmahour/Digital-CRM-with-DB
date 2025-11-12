@@ -19,7 +19,7 @@ if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
   twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
 }
 
-export const sendNotification = async ({ userId, title, message, type = "GENERAL", channels = ["IN_APP"] }) => {
+export const sendNotification = async ({ userId, title, message, type = "GENERAL", channels = ["IN_APP"] , metadata, link}) => {
   try {
     // Get user details
     const user = await prisma.user.findUnique({
@@ -86,6 +86,8 @@ export const sendNotification = async ({ userId, title, message, type = "GENERAL
         userId,
         type,
         sentVia,
+        metadata,  
+        link,      
       },
     })
 
@@ -103,6 +105,8 @@ export const notifyTaskAssigned = async (task, assignedUser) => {
     message: `You have been assigned to task: ${task.title}`,
     type: "TASK_ASSIGNED",
     channels: ["IN_APP", "EMAIL", "WHATSAPP"],
+    metadata: { taskId: task.id },  // ✅ ADD THIS
+    link: `/dashboard/tasks/${task.id}`  // ✅ ADD THIS
   })
 }
 
@@ -113,6 +117,8 @@ export const notifyTaskCompleted = async (task, assignerUser) => {
     message: `Task "${task.title}" has been marked as completed`,
     type: "TASK_COMPLETED",
     channels: ["IN_APP", "EMAIL"],
+    metadata: { taskId: task.id },  // ✅ ADD THIS
+    link: `/dashboard/tasks/${task.id}`  // ✅ ADD THIS
   })
 }
 

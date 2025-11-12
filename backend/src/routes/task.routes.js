@@ -15,6 +15,15 @@ import {
   updateTaskPriority,
   updateTaskDueDate,
   updateTaskAssignee,
+
+  updateCopyIdea,
+  updateCaption,
+  updateCreativeRef,
+  updatePublishDate,
+  updateSocialStatus,
+  uploadFinalCreative,
+  getFinalCreatives,
+  deleteFinalCreative,
 } from "../controllers/task.controller.js"
 import { authenticate } from "../middleware/auth.middleware.js"
 import { upload } from "../config/upload.js"
@@ -39,5 +48,18 @@ router.get("/:taskId/comments", getTaskComments)
 router.post("/:taskId/attachments", upload.single("file"), uploadAttachment)
 router.get("/:taskId/attachments", getTaskAttachments)
 router.delete("/attachments/:attachmentId", deleteAttachment)
+
+
+// Add these new routes
+router.patch("/:id/copy-idea", authenticate, updateCopyIdea)
+router.patch("/:id/caption", authenticate, updateCaption)
+router.patch("/:id/creative-ref", authenticate, updateCreativeRef)
+router.patch("/:id/publish-date", authenticate, updatePublishDate)
+router.patch("/:id/social-status", authenticate, updateSocialStatus)
+
+// Final Creative routes
+router.post("/:taskId/final-creative", authenticate, upload.single("file"), uploadFinalCreative)
+router.get("/:taskId/final-creatives", authenticate, getFinalCreatives)
+router.delete("/final-creative/:creativeId", authenticate, deleteFinalCreative)
 
 export default router

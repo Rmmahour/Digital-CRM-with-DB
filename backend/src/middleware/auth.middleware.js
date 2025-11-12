@@ -33,14 +33,15 @@ export const authenticate = async (req, res, next) => {
   }
 }
 
-export const authorize = (roles) => {
+export const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: "Authentication required" })
     }
 
     // Convert to array if single role passed
-    const allowedRoles = Array.isArray(roles) ? roles : [roles]
+    const allowedRoles = roles.flat()
+    // const allowedRoles = Array.isArray(roles) ? roles : [roles]
 
     if (!allowedRoles.includes(req.user.role)) {
       return res.status(403).json({

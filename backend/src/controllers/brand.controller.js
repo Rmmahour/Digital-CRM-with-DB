@@ -8,7 +8,7 @@ export const getAllBrands = async (req, res, next) => {
     if (isActive !== undefined) where.isActive = isActive === "true"
 
     // Filter brands based on user role
-    if (!["SUPER_ADMIN", "ADMIN"].includes(req.user.role)) {
+    if (!["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"].includes(req.user.role)) {
       where.users = {
         some: {
           userId: req.user.id,

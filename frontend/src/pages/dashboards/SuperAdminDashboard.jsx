@@ -20,6 +20,10 @@ export default function SuperAdminDashboard() {
     loadStats()
   }, [])
 
+  const handleTaskClick = (task) => {
+  navigate(`/dashboard/tasks/${task.id}`)
+}
+
   const loadStats = async () => {
     try {
       const [users, brands, tasksResponse] = await Promise.all([

@@ -189,6 +189,53 @@ export const tasksAPI = {
     const { data } = await api.delete(`/tasks/attachments/${attachmentId}`)
     return data
   },
+
+  updateCopyIdea: async (id, copyIdea) => {
+    const response = await api.patch(`/tasks/${id}/copy-idea`, { copyIdea })
+    return response.data
+  },
+  
+  updateCaption: async (id, caption) => {
+    const response = await api.patch(`/tasks/${id}/caption`, { caption })
+    return response.data
+  },
+  
+  updateCreativeRef: async (id, creativeRef) => {
+    const response = await api.patch(`/tasks/${id}/creative-ref`, { creativeRef })
+    return response.data
+  },
+  
+  updatePublishDate: async (id, publishDate) => {
+    const response = await api.patch(`/tasks/${id}/publish-date`, { publishDate })
+    return response.data
+  },
+  
+  updateSocialStatus: async (id, socialStatus) => {
+    const response = await api.patch(`/tasks/${id}/social-status`, { socialStatus })
+    return response.data
+  },
+  
+  uploadFinalCreative: async (taskId, file, description) => {
+    const formData = new FormData()
+    formData.append("file", file)
+    if (description) formData.append("description", description)
+    
+    const response = await api.post(`/tasks/${taskId}/final-creative`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    })
+    return response.data
+  },
+  
+  getFinalCreatives: async (taskId) => {
+    const response = await api.get(`/tasks/${taskId}/final-creatives`)
+    return response.data
+  },
+  
+  deleteFinalCreative: async (creativeId) => {
+    const response = await api.delete(`/tasks/final-creative/${creativeId}`)
+    return response.data
+  },
+
 }
 
 // Notifications API

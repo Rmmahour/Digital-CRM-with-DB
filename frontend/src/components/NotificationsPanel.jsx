@@ -6,6 +6,7 @@ import { notificationsAPI } from "../services/api"
 import { useSocket } from "../contexts/SocketContext"
 import { useNavigate } from "react-router-dom"
 import { format } from "date-fns"
+import TaskList from "./TaskList.jsx"
 
 export default function NotificationsPanel({ onClose }) {
   const navigate = useNavigate()
@@ -57,36 +58,99 @@ export default function NotificationsPanel({ onClose }) {
     }
   }
 
-  const handleNotificationClick = async (notification) => {
-    // Mark as read when clicked
-    if (!notification.isRead) {
-      try {
-        await notificationsAPI.markAsRead(notification.id)
-        setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n)))
-      } catch (error) {
-        console.error("[v0] Failed to mark notification as read:", error)
-      }
-    }
+  // const handleNotificationClick = async (notification) => {
+  //   // Mark as read when clicked
+  //   if (!notification.isRead) {
+  //     try {
+  //       await notificationsAPI.markAsRead(notification.id)
+  //       setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n)))
+  //     } catch (error) {
+  //       console.error("[v0] Failed to mark notification as read:", error)
+  //     }
+  //   }
 
-    // Navigate based on notification type and data
-    if (notification.type === 'TASK_ASSIGNED' || 
-        notification.type === 'TASK_UPDATED' || 
-        notification.type === 'TASK_COMMENT' ||
-        notification.type === 'TASK_STATUS_CHANGED') {
+  //   // Navigate based on notification type and data
+  //   if (notification.type === 'TASK_ASSIGNED' || 
+  //       notification.type === 'TASK_UPDATED' || 
+  //       notification.type === 'TASK_COMMENT' ||
+  //       notification.type === 'TASK_STATUS_CHANGED') {
       
-      // Extract task ID from metadata or link
-      const taskId = notification.metadata?.taskId || notification.link?.split('/').pop()
+  //     // Extract task ID from metadata or link
+  //     const taskId = notification.metadata?.taskId || notification.link?.split('/').pop()
       
-      if (taskId) {
-        navigate(`/dashboard/tasks/${taskId}`)
-        onClose() // Close the panel after navigation
-      }
-    } else if (notification.link) {
-      // If there's a direct link, navigate to it
-      navigate(notification.link)
-      onClose()
+  //     if (taskId) {
+  //       navigate(`/dashboard/tasks/${taskId}`)
+  //       onClose() // Close the panel after navigation
+  //     }
+  //   } else if (notification.link) {
+  //     // If there's a direct link, navigate to it
+  //     navigate(notification.link)
+  //     onClose()
+  //   }
+  // }
+
+  const handleNotificationClick = async (notification) => {
+  console.log('Notification clicked:', notification)
+  
+  // Mark as read when clicked
+  if (!notification.isRead) {
+    try {
+      await notificationsAPI.markAsRead(notification.id)
+      setNotifications((prev) => 
+        prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
+      )
+    } catch (error) {
+      console.error("[v0] Failed to mark notification as read:", error)
     }
   }
+
+  // Navigate based on notification type and data
+  if (notification.type === 'TASK_ASSIGNED' || 
+      notification.type === 'TASK_UPDATED' || 
+      notification.type === 'TASK_COMMENT' ||
+      notification.type === 'COMMENT' ||
+      notification.type === 'TASK_STATUS_CHANGED') {
+    
+    // Try to get taskId from metadata first
+    let taskId = notification.metadata?.taskId
+    
+    // If not in metadata, try to extract from link
+    if (!taskId && notification.link) {
+      taskId = notification.link.split('/').pop()
+    }
+    
+    // If still no taskId, try to extract from message
+    if (!taskId && notification.message) {
+      // Try multiple patterns:
+      // Pattern 1: "STATIC #10" or "task #10"
+      let match = notification.message.match(/:\s*(\w+)\s*#(\d+)/i)
+      if (match && match[2]) {
+        taskId = match[2]  // Gets "10" from "STATIC #10"
+      } else {
+        // Pattern 2: Just "#10"
+        match = notification.message.match(/#(\d+)/i)
+        if (match && match[1]) {
+          taskId = match[1]
+        }
+      }
+    }
+    
+    console.log('Extracted taskId:', taskId)
+    
+    if (taskId) {
+      console.log('Navigating to:', `/dashboard/tasks/${taskId}`)
+      navigate(`/dashboard/tasks/${taskId}`)
+      onClose()
+    } else {
+      console.log('No taskId found in notification')
+    }
+  } else if (notification.link) {
+    // For other notification types with direct links
+    navigate(notification.link)
+    onClose()
+  }
+}
+
 
   const getNotificationIcon = (type) => {
     // You can customize icons based on notification type
@@ -160,8 +224,8 @@ export default function NotificationsPanel({ onClose }) {
                       
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium mb-1">{notification.title}</h3>
-                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">{notification.message}</p>
+                        <h3 className="font-medium mb-1">{notification.message}</h3>
+                        {/* <p className="text-sm text-gray-600 mb-2 line-clamp-2">{notification.message}</p> */}
                         <p className="text-xs text-gray-500">
                           {format(new Date(notification.createdAt), "MMM d, h:mm a")}
                         </p>

@@ -22,11 +22,12 @@ export default function TasksPage() {
     priority: "",
     brandId: "",
     search: "",
+    assignedToId: "",
   })
 
   useEffect(() => {
     loadData()
-  }, [])
+  }, []) // ✅ Only load once on mount
 
   useEffect(() => {
     applyFilters()
@@ -34,15 +35,26 @@ export default function TasksPage() {
 
   const loadData = async () => {
     try {
+      setLoading(true) // ✅ Set loading true at start
       console.log("[v0] Loading tasks for user role:", user.role)
 
-      const [tasksResponse, brandsData] = await Promise.all([tasksAPI.getAll({ limit: 1000 }), brandsAPI.getAll()])
+      const [tasksResponse, brandsData] = await Promise.all([
+        tasksAPI.getAll({ limit: 1000 }), 
+        brandsAPI.getAll()
+      ])
 
       // Extract tasks array from paginated response
       const tasksData = tasksResponse.tasks || tasksResponse
 
-      console.log("[v0] Tasks loaded:", tasksData.length)
-      setTasks(tasksData)
+      // ✅ Remove duplicates by ID
+      const uniqueTasks = Array.from(
+        new Map(tasksData.map(task => [task.id, task])).values()
+      )
+
+      console.log("[v0] Tasks loaded:", uniqueTasks.length)
+      console.log("[v0] Original count:", tasksData.length)
+      
+      setTasks(uniqueTasks)
       setBrands(brandsData)
 
       if (["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"].includes(user.role)) {
@@ -73,6 +85,10 @@ export default function TasksPage() {
       filtered = filtered.filter((t) => t.brandId === filters.brandId)
     }
 
+    if (filters.assignedToId) {
+      filtered = filtered.filter((t) => t.assignedToId === filters.assignedToId)
+    }
+
     if (filters.search) {
       const search = filters.search.toLowerCase()
       filtered = filtered.filter(
@@ -88,7 +104,15 @@ export default function TasksPage() {
   }
 
   const handleTaskCreated = (newTask) => {
-    setTasks([newTask, ...tasks])
+    // ✅ Check if task already exists before adding
+    setTasks(prevTasks => {
+      const exists = prevTasks.some(t => t.id === newTask.id)
+      if (exists) {
+        console.log("[v0] Task already exists, not adding duplicate")
+        return prevTasks
+      }
+      return [newTask, ...prevTasks]
+    })
     setShowCreateModal(false)
   }
 
@@ -129,7 +153,7 @@ export default function TasksPage() {
           <Filter className="w-5 h-5 text-text-secondary" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <select
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -168,6 +192,21 @@ export default function TasksPage() {
               </option>
             ))}
           </select>
+
+          {["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"].includes(user.role) && (
+            <select
+              value={filters.assignedToId}
+              onChange={(e) => setFilters({ ...filters, assignedToId: e.target.value })}
+              className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+            >
+              <option value="">All Assignees</option>
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.firstName} {u.lastName} ({u.role})
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="flex items-center justify-between mb-4">
@@ -175,7 +214,7 @@ export default function TasksPage() {
             Showing {filteredTasks.length} of {tasks.length} tasks
           </p>
           <button
-            onClick={() => setFilters({ status: "", priority: "", brandId: "", search: "" })}
+            onClick={() => setFilters({ status: "", priority: "", brandId: "", search: "", assignedToId: "" })}
             className="text-sm text-primary hover:text-primary-dark"
           >
             Clear Filters

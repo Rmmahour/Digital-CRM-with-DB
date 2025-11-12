@@ -107,60 +107,60 @@ export const getAllTasks = async (req, res, next) => {
   }
 }
 
-export const getTaskById = async (req, res, next) => {
-  try {
-    const { id } = req.params
+// export const getTaskById = async (req, res, next) => {
+//   try {
+//     const { id } = req.params
 
-    const task = await prisma.task.findUnique({
-      where: { id },
-      include: {
-        brand: true,
-        assignedTo: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            role: true,
-            avatar: true,
-          },
-        },
-        createdBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            role: true,
-            avatar: true,
-          },
-        },
-        comments: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                firstName: true,
-                lastName: true,
-                role: true,
-                avatar: true,
-              },
-            },
-          },
-          orderBy: { createdAt: "asc" },
-        },
-        attachments: true,
-      },
-    })
+//     const task = await prisma.task.findUnique({
+//       where: { id },
+//       include: {
+//         brand: true,
+//         assignedTo: {
+//           select: {
+//             id: true,
+//             firstName: true,
+//             lastName: true,
+//             email: true,
+//             role: true,
+//             avatar: true,
+//           },
+//         },
+//         createdBy: {
+//           select: {
+//             id: true,
+//             firstName: true,
+//             lastName: true,
+//             role: true,
+//             avatar: true,
+//           },
+//         },
+//         comments: {
+//           include: {
+//             user: {
+//               select: {
+//                 id: true,
+//                 firstName: true,
+//                 lastName: true,
+//                 role: true,
+//                 avatar: true,
+//               },
+//             },
+//           },
+//           orderBy: { createdAt: "asc" },
+//         },
+//         attachments: true,
+//       },
+//     })
 
-    if (!task) {
-      return res.status(404).json({ message: "Task not found" })
-    }
+//     if (!task) {
+//       return res.status(404).json({ message: "Task not found" })
+//     }
 
-    res.json(task)
-  } catch (error) {
-    next(error)
-  }
-}
+//     res.json(task)
+//   } catch (error) {
+//     next(error)
+//   }
+// }
 
 export const createTask = async (req, res, next) => {
   try {
@@ -367,7 +367,12 @@ export const deleteTask = async (req, res, next) => {
 
     const task = await prisma.task.findUnique({
       where: { id },
-      select: { title: true },
+      select: {
+    id: true,        // ✅ Make sure this is here
+    title: true,
+    assignedToId: true,
+    createdById: true,
+  },
     })
 
     await prisma.task.update({
@@ -419,7 +424,7 @@ export const addComment = async (req, res, next) => {
       data: {
         content,
         taskId,
-        userId: req.user.id,
+        userId: req.user.id,  // ✅ FIXED
         mentions,
       },
       include: {
@@ -438,12 +443,14 @@ export const addComment = async (req, res, next) => {
     const task = await prisma.task.findUnique({
       where: { id: taskId },
       select: {
+        id: true,      // ✅ ADD THIS
         title: true,
         assignedToId: true,
         createdById: true,
       },
     })
 
+    // Notify mentioned users
     for (const userId of mentions) {
       if (userId !== req.user.id) {
         const mentionedUser = await prisma.user.findUnique({
@@ -452,17 +459,21 @@ export const addComment = async (req, res, next) => {
         })
 
         if (mentionedUser) {
-          const io = req.app.get("io")
           await prisma.notification.create({
             data: {
-              title: "You were mentioned",
-              message: `${req.user.firstName} ${req.user.lastName} mentioned you in: ${task.title}`,
-              userId,
+              userId: userId,
               type: "MENTION",
+              title: "You were mentioned",
+              message: `${req.user.firstName} ${req.user.lastName} mentioned you in task: ${task.title}`,  // ✅ FIXED
               sentVia: ["IN_APP"],
-            },
+              metadata: {
+                taskId: task.id
+              },
+              link: `/dashboard/tasks/${task.id}`
+            }
           })
 
+          const io = req.app.get("io")
           io.to(`user-${userId}`).emit("notification", {
             type: "MENTION",
             title: "You were mentioned",
@@ -474,6 +485,7 @@ export const addComment = async (req, res, next) => {
       }
     }
 
+    // Notify task assignee and creator
     const notifyUsers = [task.assignedToId, task.createdById].filter(
       (userId) => userId && userId !== req.user.id && !mentions.includes(userId),
     )
@@ -482,12 +494,16 @@ export const addComment = async (req, res, next) => {
     for (const userId of notifyUsers) {
       await prisma.notification.create({
         data: {
-          title: "New Comment",
-          message: `${req.user.firstName} commented on: ${task.title}`,
-          userId,
+          userId: userId,
           type: "COMMENT",
+          title: "New Comment",
+          message: `${req.user.firstName} ${req.user.lastName} commented on: ${task.title}`,  // ✅ FIXED
           sentVia: ["IN_APP"],
-        },
+          metadata: {
+            taskId: task.id
+          },
+          link: `/dashboard/tasks/${task.id}`
+        }
       })
 
       io.to(`user-${userId}`).emit("new-comment", {
@@ -585,12 +601,18 @@ export const uploadAttachment = async (req, res, next) => {
     const io = req.app.get("io")
     for (const userId of notifyUsers) {
       await prisma.notification.create({
-        data: {
-          title: "New Attachment",
-          message: `${req.user.firstName} uploaded a file to: ${task.title}`,
-          userId,
-        },
-      })
+  data: {
+    title: "New Attachment",
+    message: `${req.user.firstName} uploaded a file to: ${task.title}`,
+    userId,
+    type: "TASK_UPDATED",  // ✅ ADD THIS
+    sentVia: ["IN_APP"],   // ✅ ADD THIS
+    metadata: {            // ✅ ADD THIS
+      taskId: task.id
+    },
+    link: `/dashboard/tasks/${task.id}`  // ✅ ADD THIS
+  },
+})
 
       io.to(`user-${userId}`).emit("new-attachment", {
         taskId,
@@ -709,6 +731,15 @@ export const updateTaskStatus = async (req, res, next) => {
       include: {
         brand: true,
         assignedTo: true,
+      createdBy: {  // ✅ ADD THIS
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
       },
     })
 
@@ -732,6 +763,15 @@ export const updateTaskPriority = async (req, res, next) => {
       include: {
         brand: true,
         assignedTo: true,
+      createdBy: {  // ✅ ADD THIS
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
       },
     })
 
@@ -755,6 +795,15 @@ export const updateTaskDueDate = async (req, res, next) => {
       include: {
         brand: true,
         assignedTo: true,
+      createdBy: {  // ✅ ADD THIS
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
       },
     })
 
@@ -778,6 +827,16 @@ export const updateTaskAssignee = async (req, res, next) => {
       include: {
         brand: true,
         assignedTo: true,
+      
+      createdBy: {  // ✅ ADD THIS
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
       },
     })
 
@@ -796,6 +855,469 @@ export const updateTaskAssignee = async (req, res, next) => {
 
     res.json(task)
   } catch (error) {
+    next(error)
+  }
+}
+
+
+// Update Copy Idea
+export const updateCopyIdea = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { copyIdea } = req.body
+
+    // Only writers, managers, and admins can edit
+    if (!["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER", "WRITER"].includes(req.user.role)) {
+      return res.status(403).json({ message: "You don't have permission to edit copy" })
+    }
+
+    const task = await prisma.task.update({
+      where: { id },
+      data: { copyIdea },
+      include: {
+        brand: true,
+        assignedTo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            avatar: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
+      },
+    })
+
+    res.json(task)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Update Caption
+export const updateCaption = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { caption } = req.body
+
+    // Only writers, managers, and admins can edit
+    if (!["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER", "WRITER"].includes(req.user.role)) {
+      return res.status(403).json({ message: "You don't have permission to edit caption" })
+    }
+
+    const task = await prisma.task.update({
+      where: { id },
+      data: { caption },
+      include: {
+        brand: true,
+        assignedTo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            avatar: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
+      },
+    })
+
+    res.json(task)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Update Creative Reference
+export const updateCreativeRef = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { creativeRef } = req.body
+
+    // Writers, managers, and admins can edit
+    if (!["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER", "WRITER"].includes(req.user.role)) {
+      return res.status(403).json({ message: "You don't have permission to edit creative reference" })
+    }
+
+    const task = await prisma.task.update({
+      where: { id },
+      data: { creativeRef },
+      include: {
+        brand: true,
+        assignedTo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            avatar: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
+      },
+    })
+
+    res.json(task)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Update Publish Date
+export const updatePublishDate = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { publishDate } = req.body
+
+    // Only admins and managers can change publish date
+    if (!["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Only admins and managers can change publish date" })
+    }
+
+    const task = await prisma.task.update({
+      where: { id },
+      data: { publishDate: publishDate ? new Date(publishDate) : null },
+      include: {
+        brand: true,
+        assignedTo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            avatar: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
+      },
+    })
+
+    res.json(task)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Update Social Status
+export const updateSocialStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { socialStatus } = req.body
+
+    // Only admins and managers can change social status
+    if (!["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Only admins and managers can change social status" })
+    }
+
+    const task = await prisma.task.update({
+      where: { id },
+      data: { socialStatus },
+      include: {
+        brand: true,
+        assignedTo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            avatar: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
+      },
+    })
+
+    // Send notification if status changed to PUBLISHED
+    if (socialStatus === "PUBLISHED" && task.assignedToId) {
+      await prisma.notification.create({
+        data: {
+          userId: task.assignedToId,
+          type: "TASK_UPDATED",
+          title: "Post Published",
+          message: `Your post "${task.title}" has been published`,
+          sentVia: ["IN_APP"],
+          metadata: { taskId: task.id },
+          link: `/dashboard/tasks/${task.id}`,
+        },
+      })
+
+      const io = req.app.get("io")
+      io.to(`user-${task.assignedToId}`).emit("notification", {
+        type: "TASK_UPDATED",
+        title: "Post Published",
+        message: `Your post "${task.title}" has been published`,
+      })
+    }
+
+    res.json(task)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Upload Final Creative
+export const uploadFinalCreative = async (req, res, next) => {
+  try {
+    const { taskId } = req.params
+    const { description } = req.body
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" })
+    }
+
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+      select: { assignedToId: true, title: true }
+    })
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" })
+    }
+
+    // Only assigned designer can upload final creative
+    if (task.assignedToId !== req.user.id && !["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"].includes(req.user.role)) {
+      return res.status(403).json({ message: "Only assigned designer can upload final creative" })
+    }
+
+    let fileUrl = ""
+    const fileName = req.file.originalname
+
+    if (process.env.UPLOAD_STORAGE === "cloud" && process.env.CLOUDINARY_CLOUD_NAME) {
+      const result = await uploadToCloudinary(req.file)
+      fileUrl = result.secure_url
+    } else {
+      fileUrl = `/uploads/${req.file.filename}`
+    }
+
+    const finalCreative = await prisma.finalCreative.create({
+      data: {
+        fileName,
+        fileUrl,
+        fileType: req.file.mimetype,
+        fileSize: req.file.size,
+        taskId,
+        uploadedById: req.user.id,
+        description: description || null,
+      },
+      include: {
+        uploadedBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          }
+        }
+      }
+    })
+
+    // Notify managers that final creative is uploaded
+    const managers = await prisma.user.findMany({
+      where: {
+        role: {
+          in: ["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"]
+        }
+      },
+      select: { id: true }
+    })
+
+    for (const manager of managers) {
+      if (manager.id !== req.user.id) {
+        await prisma.notification.create({
+          data: {
+            userId: manager.id,
+            type: "TASK_UPDATED",
+            title: "Final Creative Uploaded",
+            message: `${req.user.firstName} uploaded final creative for: ${task.title}`,
+            sentVia: ["IN_APP"],
+            metadata: { taskId },
+            link: `/dashboard/tasks/${taskId}`,
+          },
+        })
+
+        const io = req.app.get("io")
+        io.to(`user-${manager.id}`).emit("notification", {
+          type: "TASK_UPDATED",
+          title: "Final Creative Uploaded",
+          message: `${req.user.firstName} uploaded final creative for: ${task.title}`,
+        })
+      }
+    }
+
+    res.status(201).json(finalCreative)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Get Final Creatives for a task
+export const getFinalCreatives = async (req, res, next) => {
+  try {
+    const { taskId } = req.params
+
+    const finalCreatives = await prisma.finalCreative.findMany({
+      where: { taskId },
+      include: {
+        uploadedBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          }
+        }
+      },
+      orderBy: { createdAt: "desc" },
+    })
+
+    res.json(finalCreatives)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Delete Final Creative
+export const deleteFinalCreative = async (req, res, next) => {
+  try {
+    const { creativeId } = req.params
+
+    const creative = await prisma.finalCreative.findUnique({
+      where: { id: creativeId },
+      include: { task: true }
+    })
+
+    if (!creative) {
+      return res.status(404).json({ message: "Creative not found" })
+    }
+
+    // Only uploader or managers can delete
+    if (creative.uploadedById !== req.user.id && !["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"].includes(req.user.role)) {
+      return res.status(403).json({ message: "You don't have permission to delete this creative" })
+    }
+
+    await prisma.finalCreative.delete({
+      where: { id: creativeId },
+    })
+
+    res.json({ message: "Final creative deleted successfully" })
+  } catch (error) {
+    next(error)
+  }
+}
+
+// Update getTaskById to include new fields
+export const getTaskById = async (req, res, next) => {
+  try {
+    const { id } = req.params
+
+    const task = await prisma.task.findUnique({
+      where: { id },
+      include: {
+        brand: true,
+        assignedTo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            avatar: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
+        comments: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                role: true,
+                avatar: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "asc" },
+        },
+        attachments: true,
+        finalCreatives: {
+          include: {
+            uploadedBy: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+              }
+            }
+          },
+          orderBy: { createdAt: "desc" }
+        },
+      },
+    })
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" })
+    }
+
+    res.json(task)
+  } catch (error) {
+    console.error('[v0] getTaskById error:', error)
     next(error)
   }
 }

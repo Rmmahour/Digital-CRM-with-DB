@@ -22,6 +22,9 @@ export default function AccountManagerDashboard() {
     loadDashboard()
   }, [])
 
+
+  
+
   const loadDashboard = async () => {
     try {
       const [brands, tasksResponse] = await Promise.all([brandsAPI.getAll(), tasksAPI.getAll({ limit: 1000 })])

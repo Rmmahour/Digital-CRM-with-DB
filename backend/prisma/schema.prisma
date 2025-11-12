@@ -27,6 +27,14 @@ enum TaskStatus {
   COMPLETED
 }
 
+// New enum for social media post status
+enum SocialStatus {
+  DRAFT
+  READY_TO_PUBLISH
+  PUBLISHED
+  SCHEDULED
+}
+
 enum TaskPriority {
   LOW
   MEDIUM
@@ -48,6 +56,25 @@ enum CalendarStatus {
   ACTIVE
   COMPLETED
   ARCHIVED
+}
+
+// New model for multiple final creatives
+model FinalCreative {
+  id          String   @id @default(cuid())
+  fileName    String
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  description String?
+  taskId      String
+  uploadedById String
+  createdAt   DateTime @default(now())
+
+  task       Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy User @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([uploadedById])
 }
 
 model User {
@@ -82,6 +109,7 @@ model User {
   chatRoomMembers   ChatRoomMember[]
   readReceipts      ReadReceipt[]
   reactions         MessageReaction[] // Added reactions relation
+  finalCreatives    FinalCreative[]
 
   @@index([email])
   @@index([role])
@@ -124,39 +152,52 @@ model Task {
   id              String       @id @default(cuid())
   title           String
   description     String?
-  references      String?      // Added references field for task details
+  references      String?
   status          TaskStatus   @default(TODO)
   priority        TaskPriority @default(MEDIUM)
-  dueDate         DateTime?
+  
+  // Dates
+  dueDate         DateTime?    // When task work is due
+  publishDate     DateTime?    // When post should be published (renamed from postingDate)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  deletedAt       DateTime?
+  
+  // Social Media Post Status (separate from task status)
+  socialStatus    SocialStatus? @default(DRAFT)
+  
+  // Content fields
+  copyIdea        String?      // Writer's copy/post idea
+  caption         String?      // Final caption for the post
+  
+  // Creative fields
+  creativeRef     String?      // Reference materials (links)
+  
+  // Other existing fields
   brandId         String
   assignedToId    String?
   createdById     String
   calendarId      String?
-  postingDate     DateTime?
   contentType     ContentType?
-  referenceUpload String?
-  finalUpload     String?
+  textContent     String?      // Keep for backwards compatibility
   notes           String?
-  textContent     String?
-  deletedAt       DateTime?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
-
+  
   // Relations
-  brand       Brand        @relation(fields: [brandId], references: [id], onDelete: Cascade)
-  assignedTo  User?        @relation("AssignedTasks", fields: [assignedToId], references: [id])
-  createdBy   User         @relation("CreatedTasks", fields: [createdById], references: [id])
-  calendar    Calendar?    @relation(fields: [calendarId], references: [id], onDelete: SetNull)
-  comments    Comment[]
-  attachments Attachment[]
+  brand            Brand              @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  assignedTo       User?              @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  createdBy        User               @relation("CreatedTasks", fields: [createdById], references: [id])
+  calendar         Calendar?          @relation(fields: [calendarId], references: [id], onDelete: SetNull)
+  comments         Comment[]
+  attachments      Attachment[]
+  finalCreatives   FinalCreative[]    // Multiple final creative uploads
 
   @@index([brandId])
   @@index([assignedToId])
   @@index([createdById])
   @@index([status])
   @@index([dueDate])
-  @@index([calendarId])
-  @@index([postingDate])
+  @@index([publishDate])
+  @@index([socialStatus])
 }
 
 model Comment {
@@ -192,15 +233,17 @@ model Attachment {
 
 model Notification {
   id        String   @id @default(cuid())
+  userId    String
+  type      String
   title     String
   message   String
   isRead    Boolean  @default(false)
-  userId    String
-  type      String?  // Added notification type and channels for tracking
-  sentVia   String[] @default([]) // Array of channels: EMAIL, WHATSAPP, IN_APP
+  metadata  Json?    
+  link      String?  
+  sentVia   String[] 
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([isRead])
