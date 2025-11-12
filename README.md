@@ -450,3 +450,4 @@ MIT
 For issues and questions, please open an issue on the repository.
 # CRM96
 # CRM96
+# CRM-with-Change-in-permissions-and-Task-Details-Page
