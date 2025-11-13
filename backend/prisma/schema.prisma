@@ -68,13 +68,16 @@ model FinalCreative {
   description String?
   taskId      String
   uploadedById String
+  deletedAt   DateTime?
+  deletedBy   String?
   createdAt   DateTime @default(now())
 
   task       Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  uploadedBy User @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  uploadedBy User @relation(fields: [uploadedById], references: [id])
 
   @@index([taskId])
   @@index([uploadedById])
+  @@index([deletedAt])
 }
 
 model User {
@@ -88,13 +91,20 @@ model User {
   whatsAppNumber    String?
   role              UserRole  @default(CLIENT_VIEWER)
   isActive          Boolean   @default(true)
+  deletedAt         DateTime?
+  deletedBy         String?
   teamId            String?
   joinDate          DateTime  @default(now())
-  deletedAt         DateTime?
   resetToken        String?
   resetTokenExpiry  DateTime?
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+
+  // Deletion tracking relations
+  deleter           User?          @relation("DeletedUsers", fields: [deletedBy], references: [id])
+  deletedUsers      User[]         @relation("DeletedUsers")
+  deletedBrands     Brand[]        @relation("DeletedBrands")
+  deletedTasks      Task[]         @relation("DeletedTasks")
 
   // Relations
   assignedTasks     Task[]           @relation("AssignedTasks")
@@ -103,7 +113,8 @@ model User {
   notifications     Notification[]
   activityLogs      ActivityLog[]
   brandAccess       BrandUser[]
-  team              Team?            @relation("TeamMembers", fields: [teamId], references: [id])      // Added team relations
+  team              Team?            @relation("TeamMembers", fields: [teamId], references: [id])   
+  
   ledTeams          Team[]           @relation("TeamLeader")
   sentMessages      ChatMessage[]    @relation("SentMessages")      // Added chat relations
   chatRoomMembers   ChatRoomMember[]
@@ -113,16 +124,19 @@ model User {
 
   @@index([email])
   @@index([role])
-  @@index([teamId])      // Added team index for faster queries
+  @@index([teamId])
+  @@index([deletedAt])
+  @@index([deletedBy])
 }
 
 model Brand {
   id          String   @id @default(cuid())
   name        String
-  logo        String?      // Already exists, kept for logo support
+  logo        String?
   description String?
   isActive    Boolean  @default(true)
   deletedAt   DateTime?
+  deletedBy   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -131,7 +145,12 @@ model Brand {
   users       BrandUser[]
   calendars   Calendar[]
 
+  deleter     User?     @relation("DeletedBrands", fields: [deletedBy], references: [id], onDelete: SetNull)
+
+
   @@index([name])
+  @@index([deletedAt])
+  @@index([deletedBy])
 }
 
 model BrandUser {
@@ -162,6 +181,7 @@ model Task {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   deletedAt       DateTime?
+  deletedBy       String?
   
   // Social Media Post Status (separate from task status)
   socialStatus    SocialStatus? @default(DRAFT)
@@ -186,6 +206,7 @@ model Task {
   brand            Brand              @relation(fields: [brandId], references: [id], onDelete: Cascade)
   assignedTo       User?              @relation("AssignedTasks", fields: [assignedToId], references: [id])
   createdBy        User               @relation("CreatedTasks", fields: [createdById], references: [id])
+  deleter          User?              @relation("DeletedTasks", fields: [deletedBy], references: [id], onDelete: SetNull)
   calendar         Calendar?          @relation(fields: [calendarId], references: [id], onDelete: SetNull)
   comments         Comment[]
   attachments      Attachment[]
@@ -194,6 +215,8 @@ model Task {
   @@index([brandId])
   @@index([assignedToId])
   @@index([createdById])
+  @@index([deletedAt])
+  @@index([deletedBy])
   @@index([status])
   @@index([dueDate])
   @@index([publishDate])
@@ -206,6 +229,8 @@ model Comment {
   taskId    String
   userId    String
   mentions  String[] @default([])
+  deletedAt DateTime?
+  deletedBy String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -214,6 +239,7 @@ model Comment {
 
   @@index([taskId])
   @@index([userId])
+  @@index([deletedAt])
 }
 
 model Attachment {
@@ -224,11 +250,14 @@ model Attachment {
   fileSize    Int
   description String?
   taskId      String
+  deletedAt   DateTime?
+  deletedBy   String?
   createdAt   DateTime @default(now())
 
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId])
+  @@index([deletedAt])
 }
 
 model Notification {

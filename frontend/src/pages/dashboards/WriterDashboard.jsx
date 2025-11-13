@@ -7,6 +7,7 @@ import StatCard from "../../components/StatCard"
 import TaskList from "../../components/TaskList"
 import { tasksAPI } from "../../services/api"
 import { useAuth } from "../../contexts/AuthContext"
+import TeamActivityWidget from "../../components/TeamActivityWidget"
 
 export default function WriterDashboard() {
   const navigate = useNavigate()
@@ -78,7 +79,9 @@ export default function WriterDashboard() {
           <TaskList tasks={myTasks} title="My Writing Tasks" onTaskClick={handleTaskClick} />
         </div>
 
-        <div className="space-y-6">
+        <TeamActivityWidget />
+
+        {/* <div className="space-y-6">
           <div className="bg-background rounded-lg border border-border p-6">
             <h3 className="text-lg font-semibold mb-4">Content Stats</h3>
             <div className="space-y-4">
@@ -114,7 +117,7 @@ export default function WriterDashboard() {
               </li>
             </ul>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   )

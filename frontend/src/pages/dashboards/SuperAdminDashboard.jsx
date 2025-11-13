@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom"
 import { Users, Briefcase, CheckSquare, Activity } from "lucide-react"
 import StatCard from "../../components/StatCard"
 import { usersAPI, brandsAPI, tasksAPI } from "../../services/api"
+import TeamActivityWidget from "../../components/TeamActivityWidget"
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate()
@@ -94,7 +95,7 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-background rounded-lg border border-border p-6">
+        {/* <div className="bg-background rounded-lg border border-border p-6">
           <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
           <div className="space-y-3">
             <button
@@ -116,7 +117,10 @@ export default function SuperAdminDashboard() {
               View All Tasks
             </button>
           </div>
-        </div>
+        </div> */}
+
+          <TeamActivityWidget />
+
       </div>
     </div>
   )

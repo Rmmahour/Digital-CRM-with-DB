@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Briefcase, CheckSquare, Clock, TrendingUp } from "lucide-react"
+import { Briefcase, CheckSquare, Clock, TrendingUp, CheckCircle, AlertCircle, Users, ListTodo } from "lucide-react"
 import StatCard from "../../components/StatCard"
 import TaskList from "../../components/TaskList"
-import { brandsAPI, tasksAPI } from "../../services/api"
+import { brandsAPI, tasksAPI, dashboardAPI } from "../../services/api"
+import TeamActivityWidget from "../../components/TeamActivityWidget"
 
 export default function AccountManagerDashboard() {
   const navigate = useNavigate()
@@ -80,7 +81,7 @@ export default function AccountManagerDashboard() {
           <TaskList tasks={myTasks} title="My Tasks" onTaskClick={handleTaskClick} />
         </div>
 
-        <div className="space-y-6">
+        {/* <div className="space-y-6">
           <div className="bg-background rounded-lg border border-border p-6">
             <h3 className="text-lg font-semibold mb-4">Client Overview</h3>
             <div className="space-y-3">
@@ -100,7 +101,6 @@ export default function AccountManagerDashboard() {
               </div>
             </div>
           </div>
-
           <div className="bg-background rounded-lg border border-border p-6">
             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
             <div className="space-y-3">
@@ -118,7 +118,10 @@ export default function AccountManagerDashboard() {
               </button>
             </div>
           </div>
-        </div>
+          </div> */}
+
+<TeamActivityWidget />
+
       </div>
     </div>
   )

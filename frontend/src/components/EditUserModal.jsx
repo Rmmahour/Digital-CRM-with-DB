@@ -55,7 +55,7 @@ export default function EditUserModal({ isOpen, onClose, onSuccess, user }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto dark:bg-gray-800">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h2 className="text-xl font-semibold">Edit User</h2>
           <button onClick={onClose} className="text-text-secondary hover:text-foreground">
@@ -72,7 +72,7 @@ export default function EditUserModal({ isOpen, onClose, onSuccess, user }) {
               type="email"
               value={user.email}
               disabled
-              className="w-full px-3 py-2 border border-border rounded-lg bg-surface text-text-secondary"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
             />
           </div>
 
@@ -83,7 +83,7 @@ export default function EditUserModal({ isOpen, onClose, onSuccess, user }) {
               required
               value={formData.firstName}
               onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
             />
           </div>
 
@@ -94,7 +94,7 @@ export default function EditUserModal({ isOpen, onClose, onSuccess, user }) {
               required
               value={formData.lastName}
               onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
             />
           </div>
 
@@ -103,7 +103,7 @@ export default function EditUserModal({ isOpen, onClose, onSuccess, user }) {
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
             >
               {ROLES.map((role) => (
                 <option key={role.value} value={role.value}>

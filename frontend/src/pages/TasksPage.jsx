@@ -141,13 +141,13 @@ export default function TasksPage() {
       <div className="bg-background rounded-lg border border-border p-6">
         <div className="flex items-center gap-4 mb-6">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary dark:text-black" />
             <input
               type="text"
               placeholder="Search tasks..."
               value={filters.search}
               onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+              className="w-full pl-10 pr-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background dark:text-black"
             />
           </div>
           <Filter className="w-5 h-5 text-text-secondary" />
@@ -157,7 +157,7 @@ export default function TasksPage() {
           <select
             value={filters.status}
             onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background dark:text-black"
           >
             <option value="">All Statuses</option>
             <option value="TODO">To Do</option>
@@ -171,7 +171,7 @@ export default function TasksPage() {
           <select
             value={filters.priority}
             onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background dark:text-black"
           >
             <option value="">All Priorities</option>
             <option value="LOW">Low</option>
@@ -183,7 +183,7 @@ export default function TasksPage() {
           <select
             value={filters.brandId}
             onChange={(e) => setFilters({ ...filters, brandId: e.target.value })}
-            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+            className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background dark:text-black"
           >
             <option value="">All Brands</option>
             {brands.map((brand) => (
@@ -197,7 +197,7 @@ export default function TasksPage() {
             <select
               value={filters.assignedToId}
               onChange={(e) => setFilters({ ...filters, assignedToId: e.target.value })}
-              className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+              className="px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background dark:text-black"
             >
               <option value="">All Assignees</option>
               {users.map((u) => (

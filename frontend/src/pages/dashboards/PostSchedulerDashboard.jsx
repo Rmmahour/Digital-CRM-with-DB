@@ -6,6 +6,7 @@ import { Calendar, CheckSquare, Clock, Send } from "lucide-react"
 import StatCard from "../../components/StatCard"
 import TaskList from "../../components/TaskList"
 import { tasksAPI } from "../../services/api"
+import TeamActivityWidget from "../../components/TeamActivityWidget"
 
 export default function PostSchedulerDashboard() {
   const [stats, setStats] = useState({
@@ -68,7 +69,7 @@ export default function PostSchedulerDashboard() {
           <TaskList tasks={tasks} title="Posts to Schedule" onTaskClick={handleTaskClick} />
         </div>
 
-        <div className="space-y-6">
+        {/* <div className="space-y-6">
           <div className="bg-background rounded-lg border border-border p-6">
             <h3 className="text-lg font-semibold mb-4">Today's Schedule</h3>
             <div className="space-y-3">
@@ -106,7 +107,10 @@ export default function PostSchedulerDashboard() {
               </button>
             </div>
           </div>
-        </div>
+        </div> */}
+
+        <TeamActivityWidget />
+
       </div>
     </div>
   )

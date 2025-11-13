@@ -173,9 +173,10 @@ export const createTask = async (req, res, next) => {
       brandId,
       assignedToId,
       contentType,
-      postingDate,
-      referenceUpload,
+      publishDate,
+      // referenceUpload,
       notes,
+      references,
     } = req.body
 
     if (!title || !brandId) {
@@ -211,9 +212,10 @@ export const createTask = async (req, res, next) => {
         assignedToId: assignedToId || null,
         createdById: req.user.id,
         contentType: contentType || null,
-        postingDate: postingDate ? new Date(postingDate) : null,
-        referenceUpload: referenceUpload || null,
+        publishDate: publishDate ? new Date(publishDate) : null,
+        // referenceUpload: referenceUpload || null,
         notes: notes || null,
+        references: references || null,
       },
       include: {
         brand: true,
@@ -269,11 +271,12 @@ export const updateTask = async (req, res, next) => {
       dueDate,
       assignedToId,
       contentType,
-      postingDate,
-      referenceUpload,
+      publishDate,
+      // referenceUpload,
       finalUpload,
       notes,
       textContent,
+      references,
     } = req.body
 
     if (status === "COMPLETED") {
@@ -312,11 +315,12 @@ export const updateTask = async (req, res, next) => {
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null
     if (assignedToId !== undefined) updateData.assignedToId = assignedToId
     if (contentType !== undefined) updateData.contentType = contentType
-    if (postingDate !== undefined) updateData.postingDate = postingDate ? new Date(postingDate) : null
-    if (referenceUpload !== undefined) updateData.referenceUpload = referenceUpload
+    if (publishDate !== undefined) updateData.publishDate = publishDate ? new Date(publishDate) : null
+    // if (referenceUpload !== undefined) updateData.referenceUpload = referenceUpload
     if (finalUpload !== undefined) updateData.finalUpload = finalUpload
     if (notes !== undefined) updateData.notes = notes
     if (textContent !== undefined) updateData.textContent = textContent
+    if (references !== undefined) updateData.references = references
 
     const task = await prisma.task.update({
       where: { id },
@@ -331,6 +335,15 @@ export const updateTask = async (req, res, next) => {
             email: true,
             avatar: true,
             role: true,
+          },
+        },
+        createdBy: {  
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
           },
         },
       },
@@ -364,21 +377,51 @@ export const updateTask = async (req, res, next) => {
 export const deleteTask = async (req, res, next) => {
   try {
     const { id } = req.params
+    const { permanent } = req.query
 
     const task = await prisma.task.findUnique({
       where: { id },
       select: {
-    id: true,        // ✅ Make sure this is here
-    title: true,
-    assignedToId: true,
-    createdById: true,
-  },
+        id: true,        // ✅ Make sure this is here
+        title: true,
+        assignedToId: true,
+        createdById: true,
+      },
     })
+
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" })
+    }
+
+
+    if (permanent === 'true') {
+      if (req.user.role !== 'SUPER_ADMIN') {
+        return res.status(403).json({ 
+          message: 'Only Super Admin can permanently delete tasks' 
+        })
+      }
+
+      await prisma.task.delete({
+        where: { id }
+      })
+
+      await prisma.activityLog.create({
+        data: {
+          action: 'PERMANENT_DELETE',
+          entity: 'Task',
+          entityId: id,
+          userId: req.user.id,
+        },
+      })
+
+      return res.json({ message: "Task permanently deleted" })
+    }
 
     await prisma.task.update({
       where: { id },
       data: {
         deletedAt: new Date(),
+        deletedBy: req.user.id,
       },
     })
 
@@ -390,11 +433,13 @@ export const deleteTask = async (req, res, next) => {
         userId: req.user.id,
         metadata: {
           taskTitle: task?.title,
+          deletedBy: `${req.user.firstName} ${req.user.lastName}`,
+          willBeDeletedOn: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
         },
       },
     })
 
-    res.json({ message: "Task deleted successfully" })
+    res.json({ message: "Task moved to trash. Will be permanently deleted in 14 days." })
   } catch (error) {
     next(error)
   }

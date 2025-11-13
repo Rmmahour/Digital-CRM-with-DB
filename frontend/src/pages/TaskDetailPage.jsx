@@ -496,7 +496,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
-            <h1 className="text-3xl font-bold mb-3">{task.title}</h1>
+            <h1 className="text-3xl font-bold mb-3 dark:text-black">{task.title}</h1>
             <div className="flex items-center gap-3 flex-wrap">
               {/* Task Status */}
               {editingStatus && canManage ? (
@@ -504,7 +504,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                   <select
                     value={task.status}
                     onChange={(e) => handleUpdateStatus(e.target.value)}
-                    className="px-3 py-1 border border-blue-500 rounded-full text-sm"
+                    className="px-3 py-1 border border-blue-500 rounded-full text-sm dark:text-black"
                     autoFocus
                   >
                     <option value="TODO">TODO</option>
@@ -534,7 +534,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                   <select
                     value={task.priority}
                     onChange={(e) => handleUpdatePriority(e.target.value)}
-                    className="px-3 py-1 border border-blue-500 rounded-full text-sm"
+                    className="px-3 py-1 border border-blue-500 rounded-full text-sm dark:text-black"
                     autoFocus
                   >
                     <option value="LOW">LOW</option>
@@ -563,7 +563,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                   <select
                     value={task.socialStatus || "DRAFT"}
                     onChange={(e) => handleUpdateSocialStatus(e.target.value)}
-                    className="px-3 py-1 border border-blue-500 rounded-full text-sm"
+                    className="px-3 py-1 border border-blue-500 rounded-full text-sm dark:text-black"
                     autoFocus
                   >
                     <option value="DRAFT">DRAFT</option>
@@ -610,7 +610,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                     <select
                       value={task.assignedToId || ""}
                       onChange={(e) => handleUpdateAssignee(e.target.value)}
-                      className="px-3 py-1 border border-blue-500 rounded text-sm"
+                      className="px-3 py-1 border border-blue-500 rounded text-sm dark:text-black"
                       autoFocus
                     >
                       <option value="">Not assigned</option>
@@ -753,7 +753,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
         {/* Description */}
         {task.description && (
           <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-semibold mb-3">Description</h3>
+            <h3 className="text-lg font-semibold mb-3 dark:text-black">Description</h3>
             <p className="text-gray-600 leading-relaxed">{task.description}</p>
           </div>
         )}
@@ -765,7 +765,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold">Copy Idea / Post Copy</h3>
+            <h3 className="text-lg font-semibold dark:text-black">Copy Idea / Post Copy</h3>
           </div>
           {canEditContent && !editingCopyIdea && (
             <button
@@ -822,7 +822,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-indigo-600" />
-            <h3 className="text-lg font-semibold">Caption</h3>
+            <h3 className="text-lg font-semibold dark:text-black">Caption</h3>
           </div>
           {canEditContent && !editingCaption && (
             <button
@@ -883,7 +883,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <LinkIcon className="w-5 h-5 text-purple-600" />
-            <h3 className="text-lg font-semibold">Creative Reference</h3>
+            <h3 className="text-lg font-semibold dark:text-black">Creative Reference</h3>
           </div>
           {canEditContent && !editingCreativeRef && (
             <button
@@ -951,7 +951,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
 
       {/* Final Creative Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 dark:text-black">
           <Image className="w-5 h-5 text-green-600" />
           Final Creative ({finalCreatives.length})
         </h3>
@@ -1056,7 +1056,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
 
       {/* Reference Attachments Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-4">Reference Attachments ({task.attachments?.length || 0})</h3>
+        <h3 className="text-lg font-semibold mb-4 dark:text-black">Reference Attachments ({task.attachments?.length || 0})</h3>
 
         {canEditContent && (
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
@@ -1150,7 +1150,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
 
       {/* Comments Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-4">Comments ({task.comments?.length || 0})</h3>
+        <h3 className="text-lg font-semibold mb-4 dark:text-black">Comments ({task.comments?.length || 0})</h3>
 
         <form onSubmit={handleSubmitComment} className="mb-6">
           <div className="flex gap-3">

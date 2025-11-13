@@ -215,7 +215,7 @@ export default function CalendarPage() {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold mb-2">
+            <h1 className="text-3xl font-bold mb-2 dark:text-black">
               {calendar.brand.name} - {format(new Date(calendar.year, calendar.month - 1), "MMMM yyyy")}
             </h1>
             <p className="text-gray-600">Social Media Calendar & Content Planning</p>
@@ -224,7 +224,7 @@ export default function CalendarPage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowScopeModal(true)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors dark:text-black"
               >
                 <Plus className="w-4 h-4" />
                 Add Scope
@@ -247,10 +247,10 @@ export default function CalendarPage() {
               return (
                 <div key={scope.id} className="bg-gray-50 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-sm">{contentTypeLabels[scope.contentType]}</h3>
-                    <span className="text-xs text-gray-600">{prog.percentage}%</span>
+                    <h3 className="font-semibold text-sm dark:text-black">{contentTypeLabels[scope.contentType]}</h3>
+                    <span className="text-xs text-gray-600 dark:text-black">{prog.percentage}%</span>
                   </div>
-                  <div className="text-2xl font-bold mb-2">
+                  <div className="text-2xl font-bold mb-2 dark:text-black">
                     {prog.completed}/{prog.total}
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -316,9 +316,9 @@ export default function CalendarPage() {
               {filteredTasks && filteredTasks.length > 0 ? (
                 filteredTasks.map((task, index) => (
                   <tr key={task.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-sm">{index + 1}</td>
-                    <td className="px-4 py-3 text-sm font-medium">{task.title}</td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm dark:text-black">{index + 1}</td>
+                    <td className="px-4 py-3 text-sm font-medium dark:text-black">{task.title}</td>
+                    <td className="px-4 py-3 text-sm dark:text-black">
                       {task.postingDate ? format(new Date(task.postingDate), "MM/dd/yyyy") : "-"}
                     </td>
                     <td className="px-4 py-3">
@@ -326,7 +326,7 @@ export default function CalendarPage() {
                         {task.contentType ? contentTypeLabels[task.contentType] : "N/A"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm dark:text-black">
                       {editingTaskId === task.id && canManage ? (
                         <select
                           value={assigningTo}
@@ -339,7 +339,7 @@ export default function CalendarPage() {
                             }
                           }}
                           autoFocus
-                          className="text-sm border border-gray-300 rounded px-2 py-1"
+                          className="text-sm border border-gray-300 rounded px-2 py-1 dark:text-black"
                         >
                           <option value="">Unassigned</option>
                           {users.map((u) => (
@@ -374,13 +374,13 @@ export default function CalendarPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-sm max-w-xs">
+                    <td className="px-4 py-3 text-sm max-w-xs dark:text-black">
                       <div className="truncate">{task.description || "-"}</div>
                     </td>
-                    <td className="px-4 py-3 text-sm">
-                      {task.referenceUpload ? (
+                    <td className="px-4 py-3 text-sm dark:text-black">
+                      {task.references ? (
                         <a
-                          href={task.referenceUpload}
+                          href={task.references}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline"

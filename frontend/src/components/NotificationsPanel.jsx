@@ -177,10 +177,10 @@ export default function NotificationsPanel({ onClose }) {
       <div className="bg-white w-full sm:w-96 h-[80vh] sm:h-screen sm:max-h-screen flex flex-col shadow-xl">
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div>
-            <h2 className="text-xl font-bold">Notifications</h2>
+            <h2 className="text-xl font-bold dark:text-black">Notifications</h2>
             {unreadCount > 0 && <p className="text-sm text-gray-600">{unreadCount} unread</p>}
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:text-black">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -218,13 +218,13 @@ export default function NotificationsPanel({ onClose }) {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex gap-3 flex-1">
                       {/* Icon */}
-                      <div className="text-2xl">
+                      <div className="text-2xl dark:text-black">
                         {getNotificationIcon(notification.type)}
                       </div>
                       
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-medium mb-1">{notification.message}</h3>
+                        <h3 className="font-medium mb-1 dark:text-black">{notification.message}</h3>
                         {/* <p className="text-sm text-gray-600 mb-2 line-clamp-2">{notification.message}</p> */}
                         <p className="text-xs text-gray-500">
                           {format(new Date(notification.createdAt), "MMM d, h:mm a")}

@@ -166,15 +166,47 @@ export const updateUser = async (req, res, next) => {
 export const deleteUser = async (req, res, next) => {
   try {
     const { id } = req.params
+    const { permanent } = req.query
 
     if (id === req.user.id) {
       return res.status(400).json({ message: "Cannot delete your own account" })
+    }
+
+    // Only SUPER_ADMIN can permanently delete
+    if (permanent === 'true') {
+      if (req.user.role !== 'SUPER_ADMIN') {
+        return res.status(403).json({ 
+          message: 'Only Super Admin can permanently delete users' 
+        })
+      }
+
+      // Re-assign tasks before deleting
+      await prisma.task.updateMany({
+        where: { assignedToId: id },
+        data: { assignedToId: null }
+      })
+
+      await prisma.user.delete({
+        where: { id }
+      })
+
+      await prisma.activityLog.create({
+        data: {
+          action: 'PERMANENT_DELETE',
+          entity: 'User',
+          entityId: id,
+          userId: req.user.id,
+        },
+      })
+
+      return res.json({ message: "User permanently deleted" })
     }
 
     await prisma.user.update({
       where: { id },
       data: {
         deletedAt: new Date(),
+        deletedBy: req.user.id,
         isActive: false,
       },
     })
@@ -186,10 +218,14 @@ export const deleteUser = async (req, res, next) => {
         entity: "User",
         entityId: id,
         userId: req.user.id,
+        metadata: {
+          deletedBy: `${req.user.firstName} ${req.user.lastName}`,
+          willBeDeletedOn: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+        }
       },
     })
 
-    res.json({ message: "User deleted successfully" })
+    res.json({ message: "User moved to trash. Will be permanently deleted in 14 days." })
   } catch (error) {
     next(error)
   }

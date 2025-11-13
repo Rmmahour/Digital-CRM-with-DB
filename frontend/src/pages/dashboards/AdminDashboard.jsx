@@ -6,6 +6,7 @@ import { Briefcase, CheckSquare, Users, TrendingUp } from "lucide-react"
 import StatCard from "../../components/StatCard"
 import TaskList from "../../components/TaskList"
 import { brandsAPI, tasksAPI } from "../../services/api"
+import TeamActivityWidget from "../../components/TeamActivityWidget"
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -92,8 +93,10 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
+          <TeamActivityWidget />
+          
 
-          <div className="bg-background rounded-lg border border-border p-6">
+          {/* <div className="bg-background rounded-lg border border-border p-6">
             <h3 className="text-lg font-semibold mb-4">Team Activity</h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center gap-3">
@@ -109,8 +112,11 @@ export default function AdminDashboard() {
                 <span className="text-text-secondary">12 active team members</span>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
+
+
+
       </div>
     </div>
   )

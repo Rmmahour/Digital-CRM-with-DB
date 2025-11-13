@@ -108,24 +108,24 @@ export default function SettingsPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <Settings className="w-6 h-6 text-gray-700" />
-            <h2 className="text-xl font-semibold">General Settings</h2>
+            <h2 className="text-xl font-semibold dark:text-black">General Settings</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium">System Name</p>
+                <p className="font-medium dark:text-black">System Name</p>
                 <p className="text-sm text-gray-600">Abacus CRM</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium">Version</p>
+                <p className="font-medium dark:text-black">Version</p>
                 <p className="text-sm text-gray-600">1.0.0</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium">Environment</p>
+                <p className="font-medium dark:text-black">Environment</p>
                 <p className="text-sm text-gray-600">Production</p>
               </div>
             </div>
@@ -136,24 +136,24 @@ export default function SettingsPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <Users className="w-6 h-6 text-gray-700" />
-            <h2 className="text-xl font-semibold">User Management</h2>
+            <h2 className="text-xl font-semibold dark:text-black">User Management</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium">Default Role</p>
+                <p className="font-medium dark:text-black">Default Role</p>
                 <p className="text-sm text-gray-600">Client Viewer</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium">Password Policy</p>
+                <p className="font-medium dark:text-black">Password Policy</p>
                 <p className="text-sm text-gray-600">Minimum 6 characters</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium">Session Timeout</p>
+                <p className="font-medium dark:text-black">Session Timeout</p>
                 <p className="text-sm text-gray-600">7 days</p>
               </div>
             </div>
@@ -164,24 +164,24 @@ export default function SettingsPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <Shield className="w-6 h-6 text-gray-700" />
-            <h2 className="text-xl font-semibold">Security</h2>
+            <h2 className="text-xl font-semibold dark:text-black">Security</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium">Two-Factor Authentication</p>
+                <p className="font-medium dark:text-black">Two-Factor Authentication</p>
                 <p className="text-sm text-gray-600">Coming soon</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium">Activity Logging</p>
+                <p className="font-medium dark:text-black">Activity Logging</p>
                 <p className="text-sm text-green-600">Enabled</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium">API Rate Limiting</p>
+                <p className="font-medium dark:text-black">API Rate Limiting</p>
                 <p className="text-sm text-green-600">Active</p>
               </div>
             </div>
@@ -192,24 +192,24 @@ export default function SettingsPage() {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <Database className="w-6 h-6 text-gray-700" />
-            <h2 className="text-xl font-semibold">Storage</h2>
+            <h2 className="text-xl font-semibold dark:text-black">Storage</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium">File Upload Limit</p>
+                <p className="font-medium dark:text-black">File Upload Limit</p>
                 <p className="text-sm text-gray-600">10 MB per file</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium">Storage Provider</p>
+                <p className="font-medium dark:text-black">Storage Provider</p>
                 <p className="text-sm text-gray-600">Local + Cloudinary</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium">Backup Schedule</p>
+                <p className="font-medium dark:text-black">Backup Schedule</p>
                 <p className="text-sm text-gray-600">Daily at 2:00 AM</p>
               </div>
             </div>

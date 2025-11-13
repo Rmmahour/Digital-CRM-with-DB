@@ -390,13 +390,13 @@ export default function ChatPage() {
       {/* Chat List Sidebar */}
       <div className="w-80 border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold mb-3">Messages</h2>
+          <h2 className="text-xl font-bold mb-3 dark:text-black">Messages</h2>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-black" />
             <input
               type="text"
               placeholder="Search conversations..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
             />
           </div>
         </div>
@@ -418,7 +418,7 @@ export default function ChatPage() {
                   <h3 className="font-semibold truncate">{getChatName(room)}</h3>
                   {room.isGroup && <span className="text-xs text-gray-500">{room.members?.length || 0}</span>}
                 </div>
-                <p className="text-sm text-gray-600 truncate">{getLastMessage(room)}</p>
+                <p className="text-sm text-gray-600 truncate dark:text-black">{getLastMessage(room)}</p>
               </div>
             </button>
           ))}
@@ -444,8 +444,8 @@ export default function ChatPage() {
                   <Users className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">{getChatName(selectedRoom)}</h3>
-                  {typingUsers.size > 0 && <p className="text-sm text-blue-600">typing...</p>}
+                  <h3 className="font-semibold dark:text-black">{getChatName(selectedRoom)}</h3>
+                  {typingUsers.size > 0 && <p className="text-sm text-blue-600 dark:text-black">typing...</p>}
                 </div>
               </div>
               <button className="p-2 hover:bg-gray-100 rounded-lg">
@@ -462,11 +462,11 @@ export default function ChatPage() {
                     <div className={`${isOwn ? "" : "max-w-[70%]"}`}>
                       <div
                         className={`${
-                          isOwn ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
+                          isOwn ? "bg-blue-600 text-white dark:text-black" : "bg-gray-100 text-gray-900"
                         } rounded-lg px-4 py-2`}
                       >
                         {!isOwn && message.sender && (
-                          <p className="text-xs font-semibold mb-1">
+                          <p className="text-xs font-semibold mb-1 dark:text-black">
                             {message.sender.firstName} {message.sender.lastName}
                           </p>
                         )}

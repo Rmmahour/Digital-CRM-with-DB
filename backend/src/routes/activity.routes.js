@@ -1,5 +1,5 @@
 import express from "express"
-import { getAllActivityLogs, getActivityLogById } from "../controllers/activity.controller.js"
+import { getAllActivityLogs, getActivityLogById, getDashboardStats } from "../controllers/activity.controller.js"
 import { authenticate } from "../middleware/auth.middleware.js"
 
 const router = express.Router()
@@ -15,6 +15,7 @@ router.use((req, res, next) => {
 })
 
 router.get("/", getAllActivityLogs)
+router.get("/stats", getDashboardStats)
 router.get("/:id", getActivityLogById)
 
 export default router

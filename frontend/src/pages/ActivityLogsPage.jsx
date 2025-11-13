@@ -73,7 +73,7 @@ export default function ActivityLogsPage() {
           <select
             value={filterEntity}
             onChange={(e) => setFilterEntity(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-black"
           >
             <option value="">All Entities</option>
             <option value="User">Users</option>
@@ -84,7 +84,7 @@ export default function ActivityLogsPage() {
           <select
             value={limit}
             onChange={(e) => setLimit(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-black"
           >
             <option value="50">Last 50</option>
             <option value="100">Last 100</option>

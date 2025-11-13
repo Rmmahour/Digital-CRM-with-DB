@@ -6,6 +6,7 @@ import { Eye, TrendingUp, Calendar, BarChart } from "lucide-react"
 import StatCard from "../../components/StatCard"
 import TaskList from "../../components/TaskList"
 import { tasksAPI, brandsAPI } from "../../services/api"
+import TeamActivityWidget from "../../components/TeamActivityWidget"
 
 export default function ClientViewerDashboard() {
   const navigate = useNavigate()
@@ -68,7 +69,7 @@ export default function ClientViewerDashboard() {
           <TaskList tasks={recentTasks} title="Recent Content" onTaskClick={handleTaskClick} />
         </div>
 
-        <div className="space-y-6">
+        {/* <div className="space-y-6">
           <div className="bg-background rounded-lg border border-border p-6">
             <h3 className="text-lg font-semibold mb-4">Performance Overview</h3>
             <div className="space-y-4">
@@ -93,7 +94,10 @@ export default function ClientViewerDashboard() {
               Your team is working on {stats.scheduledPosts} posts scheduled for publication.
             </p>
           </div>
-        </div>
+        </div> */}
+
+          <TeamActivityWidget />
+
       </div>
     </div>
   )

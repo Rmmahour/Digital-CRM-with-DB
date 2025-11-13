@@ -25,6 +25,7 @@ import CalendarPage from "./pages/CalendarPage"
 import ChatPage from "./pages/ChatPage"
 import TeamsPage from "./pages/TeamsPage"
 import ProtectedRoute from "./components/ProtectedRoute"
+import TrashPage from "./pages/TrashPage"
 
 function App() {
   const { user, loading } = useAuth()
@@ -111,6 +112,15 @@ function App() {
               <SettingsPage />
             </ProtectedRoute>
           }
+        />
+
+        <Route 
+          path="trash" 
+          element={
+            <ProtectedRoute allowedRoles={["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"]}>
+              <TrashPage />
+            </ProtectedRoute>
+          } 
         />
       </Route>
       

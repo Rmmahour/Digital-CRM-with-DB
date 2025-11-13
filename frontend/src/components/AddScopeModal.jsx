@@ -40,7 +40,7 @@ export default function AddScopeModal({ isOpen, onClose, onSuccess, calendarId }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+      <div className="bg-white rounded-lg p-6 w-full max-w-md dark:bg-gray-800">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold">Add Scope Item</h2>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
@@ -54,7 +54,7 @@ export default function AddScopeModal({ isOpen, onClose, onSuccess, calendarId }
             <select
               value={formData.contentType}
               onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500  dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               required
             >
               {contentTypes.map((type) => (
@@ -72,7 +72,7 @@ export default function AddScopeModal({ isOpen, onClose, onSuccess, calendarId }
               min="1"
               value={formData.quantity}
               onChange={(e) => setFormData({ ...formData, quantity: Number.parseInt(e.target.value) })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               required
             />
           </div>

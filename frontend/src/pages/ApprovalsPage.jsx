@@ -68,7 +68,7 @@ export default function ApprovalsPage() {
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:text-black"
         >
           <option value="IN_REVIEW">Pending Review</option>
           <option value="APPROVED">Approved</option>

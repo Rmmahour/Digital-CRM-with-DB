@@ -117,7 +117,7 @@ export default function ProfilePage() {
             <User className="w-8 h-8 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-xl font-semibold dark:text-black">
               {user?.firstName} {user?.lastName}
             </h2>
             <p className="text-gray-600">{user?.email}</p>
@@ -129,14 +129,14 @@ export default function ProfilePage() {
             <Shield className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Role</p>
-              <p className="font-medium">{getRoleName(user?.role || "")}</p>
+              <p className="font-medium dark:text-black">{getRoleName(user?.role || "")}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Member Since</p>
-              <p className="font-medium">{formatDate(user?.joinDate || user?.createdAt)}</p>
+              <p className="font-medium dark:text-black">{formatDate(user?.joinDate || user?.createdAt)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -198,7 +198,7 @@ export default function ProfilePage() {
                     type="text"
                     value={profileData.firstName}
                     onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
                     required
                   />
                 </div>
@@ -208,7 +208,7 @@ export default function ProfilePage() {
                     type="text"
                     value={profileData.lastName}
                     onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
                     required
                   />
                 </div>
@@ -220,7 +220,7 @@ export default function ProfilePage() {
                   type="email"
                   value={profileData.email}
                   onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
                   required
                 />
               </div>
@@ -246,7 +246,7 @@ export default function ProfilePage() {
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
                   required
                 />
               </div>
@@ -257,7 +257,7 @@ export default function ProfilePage() {
                   type="password"
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
                   required
                   minLength={6}
                 />
@@ -270,7 +270,7 @@ export default function ProfilePage() {
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
                   required
                   minLength={6}
                 />

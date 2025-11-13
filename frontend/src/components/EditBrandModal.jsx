@@ -45,7 +45,7 @@ export default function EditBrandModal({ isOpen, onClose, onSuccess, brand }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-background rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto dark:bg-gray-800">
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h2 className="text-xl font-semibold">Edit Brand</h2>
           <button onClick={onClose} className="text-text-secondary hover:text-foreground">
@@ -63,7 +63,7 @@ export default function EditBrandModal({ isOpen, onClose, onSuccess, brand }) {
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary  dark:text-black"
             />
           </div>
 
@@ -73,7 +73,7 @@ export default function EditBrandModal({ isOpen, onClose, onSuccess, brand }) {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary  dark:text-black"
             />
           </div>
 
@@ -83,7 +83,7 @@ export default function EditBrandModal({ isOpen, onClose, onSuccess, brand }) {
               type="url"
               value={formData.logo}
               onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary  dark:text-black"
             />
           </div>
 
@@ -93,7 +93,7 @@ export default function EditBrandModal({ isOpen, onClose, onSuccess, brand }) {
               id="isActive"
               checked={formData.isActive}
               onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="w-4 h-4 text-primary border-border rounded focus:ring-2 focus:ring-primary"
+              className="w-4 h-4 text-primary border-border rounded focus:ring-2 focus:ring-primary  dark:text-black"
             />
             <label htmlFor="isActive" className="text-sm font-medium">
               Active Brand

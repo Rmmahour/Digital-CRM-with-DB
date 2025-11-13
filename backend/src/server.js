@@ -15,6 +15,8 @@ import calendarRoutes from "./routes/calendar.routes.js"
 import teamRoutes from "./routes/team.routes.js"
 import chatRoutes from "./routes/chat.routes.js"
 import recoveryRoutes from "./routes/recovery.routes.js"
+import trashRoutes from "./routes/trash.routes.js"
+import { startTrashCleanupSchedule } from "./jobs/cleanupTrash.js"
 import { errorHandler } from "./middleware/error.middleware.js"
 
 dotenv.config()
@@ -46,6 +48,10 @@ app.use("/uploads", express.static(path.join(__dirname, "../uploads")))
 // Make io accessible to routes
 app.set("io", io)
 
+
+startTrashCleanupSchedule()
+
+
 // Routes
 app.use("/api/auth", authRoutes)
 app.use("/api/users", userRoutes)
@@ -57,7 +63,7 @@ app.use("/api/calendars", calendarRoutes)
 app.use("/api/teams", teamRoutes)
 app.use("/api/chat", chatRoutes)
 app.use("/api/recovery", recoveryRoutes)
-
+app.use("/api/trash", trashRoutes)
 // Health check
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", message: "Server is running" })

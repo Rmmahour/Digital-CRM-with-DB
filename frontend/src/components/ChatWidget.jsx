@@ -296,7 +296,7 @@ export default function ChatWidget() {
                     >
                       ← Back
                     </button>
-                    <h4 className="font-medium flex-1">Select User to Chat</h4>
+                    <h4 className="font-medium flex-1 dark:text-gray-800">Select User to Chat</h4>
                   </div>
 
                   <div className="p-3 border-b border-gray-200">

@@ -18,6 +18,9 @@
     "express",
     "jwt"
   ],
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "author": "",
   "license": "MIT",
   "dependencies": {

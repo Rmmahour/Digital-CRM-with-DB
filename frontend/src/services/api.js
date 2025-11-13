@@ -62,6 +62,13 @@ export const authAPI = {
   },
 }
 
+export const dashboardAPI = {
+  getStats: async () => {
+    const response = await api.get('/activity/stats')
+    return response.data
+  }
+}
+
 // Users API
 export const usersAPI = {
   getAll: async (params) => {
@@ -448,6 +455,28 @@ export const recoveryAPI = {
   },
 }
 
+
+export const trashAPI = {
+  getAll: async (type) => {
+    const response = await api.get(`/trash${type ? `?type=${type}` : ''}`)
+    return response.data
+  },
+  
+  restore: async (type, id) => {
+    const response = await api.post(`/trash/restore/${type}/${id}`)
+    return response.data
+  },
+  
+  permanentlyDelete: async (type, id) => {
+    const response = await api.delete(`/trash/${type}/${id}`)
+    return response.data
+  },
+  
+  emptyTrash: async () => {
+    const response = await api.post('/trash/empty')
+    return response.data
+  }
+}
 
 
 

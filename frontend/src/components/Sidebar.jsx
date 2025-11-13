@@ -12,6 +12,7 @@ import {
   User,
   MessageCircle,
   Users2,
+  Trash2,
 } from "lucide-react"
 
 export default function Sidebar() {
@@ -51,7 +52,8 @@ export default function Sidebar() {
       icon: User,
       roles: ["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER", "WRITER", "DESIGNER", "POST_SCHEDULER", "CLIENT_VIEWER"],
     },
-    { name: "Settings", href: "/dashboard/settings", icon: Settings, roles: ["SUPER_ADMIN", "ADMIN"] },
+    { name: "Settings", href: "/dashboard/settings", icon: Settings, roles: ["SUPER_ADMIN"] },
+    { name: "Trash", href: "/dashboard/trash", icon: Trash2, roles: ["SUPER_ADMIN"] }
   ]
 
   const filteredNav = navigation.filter((item) => item.roles.includes(user?.role))
@@ -59,6 +61,7 @@ export default function Sidebar() {
   return (
     <div className="w-64 bg-background border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
+        {/* <img src="abacusdesk-logo.svg" alt="Abacus CRM" className="w-32 h-auto mb-2" /> */}
         <h1 className="text-2xl font-bold text-primary">Abacus CRM</h1>
         <p className="text-sm text-text-secondary mt-1">{user?.role?.replace("_", " ")}</p>
       </div>

@@ -140,11 +140,37 @@ export const updateBrand = async (req, res, next) => {
 export const deleteBrand = async (req, res, next) => {
   try {
     const { id } = req.params
+    const { permanent } = req.query
+
+    if (permanent === 'true') {
+      if (req.user.role !== 'SUPER_ADMIN') {
+        return res.status(403).json({ 
+          message: 'Only Super Admin can permanently delete brands' 
+        })
+      }
+
+      // Permanently delete
+      await prisma.brand.delete({
+        where: { id }
+      })
+
+      await prisma.activityLog.create({
+        data: {
+          action: 'PERMANENT_DELETE',
+          entity: 'Brand',
+          entityId: id,
+          userId: req.user.id,
+        },
+      })
+
+      return res.json({ message: "Brand permanently deleted" })
+    }
 
     await prisma.brand.update({
       where: { id },
       data: {
         deletedAt: new Date(),
+        deletedBy: req.user.id,
         isActive: false,
       },
     })
@@ -156,10 +182,14 @@ export const deleteBrand = async (req, res, next) => {
         entity: "Brand",
         entityId: id,
         userId: req.user.id,
+        metadata: {
+          deletedBy: `${req.user.firstName} ${req.user.lastName}`,
+          willBeDeletedOn: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+        }
       },
     })
 
-    res.json({ message: "Brand deleted successfully" })
+    res.json({ message: "Brand moved to trash. Will be permanently deleted in 14 days." })
   } catch (error) {
     next(error)
   }
