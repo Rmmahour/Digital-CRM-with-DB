@@ -79,7 +79,7 @@ export default function WriterDashboard() {
           <TaskList tasks={myTasks} title="My Writing Tasks" onTaskClick={handleTaskClick} />
         </div>
 
-        <TeamActivityWidget />
+        {/* <TeamActivityWidget /> */}
 
         {/* <div className="space-y-6">
           <div className="bg-background rounded-lg border border-border p-6">

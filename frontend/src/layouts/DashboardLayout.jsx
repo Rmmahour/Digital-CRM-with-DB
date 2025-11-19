@@ -5,7 +5,7 @@ import ChatWidget from "../components/ChatWidget"
 
 export default function DashboardLayout() {
   return (
-    <div className="flex h-screen bg-surface">
+    <div className="flex grid-cols-1 h-screen bg-surface">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />

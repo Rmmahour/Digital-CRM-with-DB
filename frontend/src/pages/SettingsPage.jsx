@@ -65,34 +65,34 @@ export default function SettingsPage() {
 
       {/* System Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
           <div className="flex items-center justify-between mb-4">
             <Users className="w-8 h-8 text-blue-600" />
             <span className="text-sm font-medium text-gray-500">Total Users</span>
           </div>
-          <div className="text-3xl font-bold text-gray-900">{stats.totalUsers}</div>
+          <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalUsers}</div>
           <p className="text-sm text-gray-600 mt-2">{stats.activeUsers} active users</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
           <div className="flex items-center justify-between mb-4">
             <Building2 className="w-8 h-8 text-green-600" />
             <span className="text-sm font-medium text-gray-500">Total Brands</span>
           </div>
-          <div className="text-3xl font-bold text-gray-900">{stats.totalBrands}</div>
+          <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.totalBrands}</div>
           <p className="text-sm text-gray-600 mt-2">{stats.activeBrands} active brands</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
           <div className="flex items-center justify-between mb-4">
             <Activity className="w-8 h-8 text-purple-600" />
             <span className="text-sm font-medium text-gray-500">Activities</span>
           </div>
-          <div className="text-3xl font-bold text-gray-900">{stats.recentActivities}</div>
+          <div className="text-3xl font-bold text-gray-900 dark:text-white">{stats.recentActivities}</div>
           <p className="text-sm text-gray-600 mt-2">Recent system activities</p>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
           <div className="flex items-center justify-between mb-4">
             <Database className="w-8 h-8 text-orange-600" />
             <span className="text-sm font-medium text-gray-500">System Status</span>
@@ -105,27 +105,27 @@ export default function SettingsPage() {
       {/* Settings Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* General Settings */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
           <div className="flex items-center gap-3 mb-4">
             <Settings className="w-6 h-6 text-gray-700" />
-            <h2 className="text-xl font-semibold dark:text-black">General Settings</h2>
+            <h2 className="text-xl font-semibold dark:text-white">General Settings</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium dark:text-black">System Name</p>
+                <p className="font-medium dark:text-white">System Name</p>
                 <p className="text-sm text-gray-600">Abacus CRM</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium dark:text-black">Version</p>
+                <p className="font-medium dark:text-white">Version</p>
                 <p className="text-sm text-gray-600">1.0.0</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium dark:text-black">Environment</p>
+                <p className="font-medium dark:text-white">Environment</p>
                 <p className="text-sm text-gray-600">Production</p>
               </div>
             </div>
@@ -133,27 +133,27 @@ export default function SettingsPage() {
         </div>
 
         {/* User Management Settings */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
           <div className="flex items-center gap-3 mb-4">
             <Users className="w-6 h-6 text-gray-700" />
-            <h2 className="text-xl font-semibold dark:text-black">User Management</h2>
+            <h2 className="text-xl font-semibold dark:text-white">User Management</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium dark:text-black">Default Role</p>
+                <p className="font-medium dark:text-white">Default Role</p>
                 <p className="text-sm text-gray-600">Client Viewer</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium dark:text-black">Password Policy</p>
+                <p className="font-medium dark:text-white">Password Policy</p>
                 <p className="text-sm text-gray-600">Minimum 6 characters</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium dark:text-black">Session Timeout</p>
+                <p className="font-medium dark:text-white">Session Timeout</p>
                 <p className="text-sm text-gray-600">7 days</p>
               </div>
             </div>
@@ -161,27 +161,27 @@ export default function SettingsPage() {
         </div>
 
         {/* Security Settings */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
           <div className="flex items-center gap-3 mb-4">
             <Shield className="w-6 h-6 text-gray-700" />
-            <h2 className="text-xl font-semibold dark:text-black">Security</h2>
+            <h2 className="text-xl font-semibold dark:text-white">Security</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium dark:text-black">Two-Factor Authentication</p>
+                <p className="font-medium dark:text-white">Two-Factor Authentication</p>
                 <p className="text-sm text-gray-600">Coming soon</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium dark:text-black">Activity Logging</p>
+                <p className="font-medium dark:text-white">Activity Logging</p>
                 <p className="text-sm text-green-600">Enabled</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium dark:text-black">API Rate Limiting</p>
+                <p className="font-medium dark:text-white">API Rate Limiting</p>
                 <p className="text-sm text-green-600">Active</p>
               </div>
             </div>
@@ -189,27 +189,27 @@ export default function SettingsPage() {
         </div>
 
         {/* Storage Settings */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
           <div className="flex items-center gap-3 mb-4">
             <Database className="w-6 h-6 text-gray-700" />
-            <h2 className="text-xl font-semibold dark:text-black">Storage</h2>
+            <h2 className="text-xl font-semibold dark:text-white">Storage</h2>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium dark:text-black">File Upload Limit</p>
+                <p className="font-medium dark:text-white">File Upload Limit</p>
                 <p className="text-sm text-gray-600">10 MB per file</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3 border-b border-gray-200">
               <div>
-                <p className="font-medium dark:text-black">Storage Provider</p>
+                <p className="font-medium dark:text-white">Storage Provider</p>
                 <p className="text-sm text-gray-600">Local + Cloudinary</p>
               </div>
             </div>
             <div className="flex items-center justify-between py-3">
               <div>
-                <p className="font-medium dark:text-black">Backup Schedule</p>
+                <p className="font-medium dark:text-white">Backup Schedule</p>
                 <p className="text-sm text-gray-600">Daily at 2:00 AM</p>
               </div>
             </div>
@@ -218,9 +218,9 @@ export default function SettingsPage() {
       </div>
 
       {/* Info Banner */}
-      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="font-semibold text-blue-900 mb-2">Need to modify settings?</h3>
-        <p className="text-blue-700 text-sm">
+      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6 dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+        <h3 className="font-semibold text-blue-900 mb-2 dark:text-white">Need to modify settings?</h3>
+        <p className="text-blue-700 text-sm dark:text-gray-400">
           Most system settings are configured through environment variables. Contact your system administrator to make
           changes to core system configuration.
         </p>

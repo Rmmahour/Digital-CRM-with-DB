@@ -18,6 +18,7 @@ export default function AdminDashboard() {
   })
   const [recentTasks, setRecentTasks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     loadDashboard()
@@ -25,7 +26,11 @@ export default function AdminDashboard() {
 
   const loadDashboard = async () => {
     try {
-      const [brands, tasks] = await Promise.all([brandsAPI.getAll(), tasksAPI.getAll()])
+      const [brandsResponse, tasksResponse] = await Promise.all([brandsAPI.getAll(), tasksAPI.getAll()])
+      
+      // ✅ Ensure we have arrays before using array methods
+      const brands = Array.isArray(brandsResponse) ? brandsResponse : []
+      const tasks = Array.isArray(tasksResponse) ? tasksResponse : []
 
       setStats({
         totalBrands: brands.length,

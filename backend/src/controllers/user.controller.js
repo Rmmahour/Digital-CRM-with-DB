@@ -117,7 +117,7 @@ export const updateUser = async (req, res, next) => {
     const { firstName, lastName, role, isActive, whatsAppNumber, avatar, mobileNumber } = req.body
 
     // Only Super Admin can change roles
-    if (role && req.user.role !== "SUPER_ADMIN") {
+    if (role && !["SUPER_ADMIN", "ADMIN"].includes(req.user.role)) {
       return res.status(403).json({ message: "Only Super Admin can change roles" })
     }
 
@@ -162,6 +162,41 @@ export const updateUser = async (req, res, next) => {
     next(error)
   }
 }
+
+export const uploadProfileImage = async (req, res, next) => {
+  try {
+    const userId = req.body.userId;
+
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const imageUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+
+    // Save to DB using Prisma
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { avatar: imageUrl },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        avatar: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      imageUrl,
+      user,
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 
 export const deleteUser = async (req, res, next) => {
   try {
@@ -230,6 +265,7 @@ export const deleteUser = async (req, res, next) => {
     next(error)
   }
 }
+
 
 export const updateUserStatus = async (req, res, next) => {
   try {

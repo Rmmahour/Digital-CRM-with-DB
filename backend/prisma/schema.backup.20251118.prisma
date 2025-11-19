@@ -59,35 +59,6 @@ enum CalendarStatus {
   ARCHIVED
 }
 
-// 7. ✅ NEW: Enum for notification types (add near top with other enums)
-enum NotificationType {
-  MESSAGE
-  MENTION
-  TASK_ASSIGNED
-  TASK_UPDATED
-  TASK_COMMENT
-  DEADLINE_REMINDER
-  APPROVAL_REQUEST
-  APPROVAL_RESPONSE
-  SYSTEM
-}
-
-enum DeliveryStatus {
-  SENT
-  DELIVERED
-  FAILED
-  PENDING
-}
-
-// 4. ✅ NEW: Enum for media types (add this near the top with other enums)
-enum MediaType {
-  IMAGE
-  VIDEO
-  AUDIO
-  FILE
-  DOCUMENT
-}
-
 // New model for multiple final creatives
 model FinalCreative {
   id          String   @id @default(cuid())
@@ -121,8 +92,6 @@ model User {
   whatsAppNumber    String?
   role              UserRole  @default(CLIENT_VIEWER)
   isActive          Boolean   @default(true)
-  isOnline          Boolean   @default(false)  // ✅ NEW: Online status
-  lastSeenAt        DateTime  @default(now())  // ✅ NEW: Last activity timestamp
   deletedAt         DateTime?
   deletedBy         String?
   teamId            String?
@@ -159,21 +128,6 @@ model User {
   @@index([teamId])
   @@index([deletedAt])
   @@index([deletedBy])
-  @@index([isOnline])    // ✅ NEW: Index for online users
-  @@index([lastSeenAt])  // ✅ NEW: Index for activity queries
-}
-
-// 9. ✅ Optional: Add typing indicator tracking model for better performance
-model TypingIndicator {
-  id          String    @id @default(cuid())
-  chatRoomId  String
-  userId      String
-  startedAt   DateTime  @default(now())
-  expiresAt   DateTime  // Auto-expire after 5 seconds
-
-  @@unique([chatRoomId, userId])
-  @@index([chatRoomId])
-  @@index([expiresAt])  // For cleanup queries
 }
 
 model Brand {
@@ -320,25 +274,15 @@ model Notification {
   message   String
   isRead    Boolean  @default(false)
   metadata  Json?    
-  link      String?
-  imageUrl    String?     // ✅ NEW: For rich notifications with images
-  senderId    String?     // ✅ NEW: Who triggered the notification
-  chatRoomId  String?     // ✅ NEW: Related chat room
-  messageId   String?     // ✅ NEW: Related message
+  link      String?  
   sentVia   String[] 
   createdAt DateTime @default(now())
-  readAt      DateTime?   // ✅ NEW: When notification was read
   
   user User @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([isRead])
-  @@index([type])         // ✅ NEW: Index for filtering by type
-  @@index([chatRoomId])   // ✅ NEW: Index for chat-related notifications
-  @@index([createdAt])    // ✅ NEW: Index for sorting by date
 }
-
-
 
 model ActivityLog {
   id        String   @id @default(cuid())
@@ -412,12 +356,6 @@ model ChatRoom {
   id          String           @id @default(cuid())
   name        String?
   isGroup     Boolean          @default(false)
-  avatar          String?          // ✅ NEW: Group chat avatar
-  description     String?          // ✅ NEW: Group chat description
-  lastMessageId   String?          // ✅ NEW: Quick access to last message
-  lastMessageAt   DateTime?        // ✅ NEW: When last message was sent
-  createdById     String?          // ✅ NEW: Who created the chat/group
-  isActive        Boolean          @default(true)  // ✅ NEW: Archive support
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -426,8 +364,6 @@ model ChatRoom {
   messages    ChatMessage[]
 
   @@index([isGroup])
-  @@index([isActive])        // ✅ NEW: Index for active chats
-  @@index([lastMessageAt])   // ✅ NEW: Index for sorting by recent activity
 }
 
 model ChatRoomMember {
@@ -437,7 +373,6 @@ model ChatRoomMember {
   joinedAt    DateTime  @default(now())
   isTyping    Boolean   @default(false)
   lastSeen    DateTime  @default(now())
-  unreadCount Int       @default(0)
 
   // Relations
   chatRoom    ChatRoom  @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
@@ -446,7 +381,6 @@ model ChatRoomMember {
   @@unique([chatRoomId, userId])
   @@index([chatRoomId])
   @@index([userId])
-  @@index([unreadCount])
 }
 
 model ChatMessage {
@@ -456,10 +390,6 @@ model ChatMessage {
   content     String
   isEdited    Boolean   @default(false)
   createdAt   DateTime  @default(now())
-  editedAt    DateTime? // ✅ NEW: Track when message was edited
-  deletedAt   DateTime? // ✅ NEW: Soft delete support
-  deletedBy   String?   // ✅ NEW: Who deleted the message
-  replyToId   String?   // ✅ NEW: Support for message replies/threads
   updatedAt   DateTime  @updatedAt
 
   // Relations
@@ -472,8 +402,6 @@ model ChatMessage {
   @@index([chatRoomId])
   @@index([senderId])
   @@index([createdAt])
-  @@index([deletedAt]) 
-  @@index([replyToId])
 }
 
 model ReadReceipt {
@@ -499,19 +427,12 @@ model ChatMedia {
   fileName    String?
   fileSize    Int?
   mimeType    String?
-  thumbnailUrl String?    // ✅ NEW: For video thumbnails
-  duration    Int?        // ✅ NEW: For audio/video duration in seconds
-  width       Int?        // ✅ NEW: For images/videos
-  height      Int?        // ✅ NEW: For images/videos
-  uploadStatus String     @default("completed") // ✅ NEW: "uploading", "completed", "failed"
   createdAt   DateTime    @default(now())
 
   // Relations
   message     ChatMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
 
   @@index([messageId])
-  @@index([type])         // ✅ NEW: Index for filtering by type
-  @@index([uploadStatus]) // ✅ NEW: Index for upload status queries
 }
 
 model MessageReaction {
@@ -528,22 +449,4 @@ model MessageReaction {
   @@unique([messageId, userId])
   @@index([messageId])
   @@index([userId])
-}
-
-
-
-// 10. ✅ Optional: Message delivery tracking (for future WhatsApp/external integrations)
-model MessageDelivery {
-  id          String    @id @default(cuid())
-  messageId   String
-  userId      String
-  status      DeliveryStatus  @default(SENT)
-  deliveredAt DateTime?
-  failedReason String?
-  createdAt   DateTime  @default(now())
-
-  @@unique([messageId, userId])
-  @@index([messageId])
-  @@index([userId])
-  @@index([status])
 }

@@ -89,7 +89,7 @@ export default function MentionInput({ value, onChange, placeholder, className }
         value={value}
         onChange={handleInputChange}
         placeholder={placeholder}
-        className={`w-full ${className}`}
+        className={`w-full dark:border-gray-600 dark:bg-gray-700 dark:text-white ${className}`}
       />
       {showSuggestions && filteredSuggestions.length > 0 && (
         <div className="absolute bottom-full left-0 mb-2 w-72 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">

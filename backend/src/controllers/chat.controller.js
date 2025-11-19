@@ -226,6 +226,77 @@ export const createGroupChat = async (req, res) => {
   }
 }
 
+// Get conversations with unread counts
+export const getConversations = async (req, res) => {
+  try {
+    const currentUserId = req.user.id
+
+    const chatRooms = await prisma.chatRoom.findMany({
+      where: {
+        members: {
+          some: {
+            userId: currentUserId,
+          },
+        },
+        isActive: true, // ✅ Only active chats
+      },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                role: true,
+                avatar: true,
+                isOnline: true, // ✅ Show online status
+                lastSeenAt: true,
+              },
+            },
+          },
+        },
+        messages: {
+          take: 1,
+          orderBy: { createdAt: "desc" },
+          include: {
+            sender: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+            media: true, // ✅ Include media for preview
+            readReceipts: true,
+          },
+        },
+      },
+      orderBy: { 
+        lastMessageAt: "desc", // ✅ Sort by most recent
+      },
+    })
+
+    // ✅ Add unread count for each conversation
+    const conversations = chatRooms.map((room) => {
+      const currentMember = room.members.find((m) => m.userId === currentUserId)
+      return {
+        ...room,
+        unreadCount: currentMember?.unreadCount || 0,
+      }
+    })
+
+    res.json(conversations)
+  } catch (error) {
+    console.error("[Chat Controller] Get conversations error:", error)
+    res.status(500).json({ 
+      message: "Failed to get conversations",
+      error: error.message 
+    })
+  }
+}
+
 // Get all chat rooms for current user
 export const getMyChatRooms = async (req, res) => {
   try {
@@ -386,7 +457,6 @@ export const getChatMessages = async (req, res) => {
   }
 }
 
-// Send message
 export const sendMessage = async (req, res) => {
   try {
     const { roomId, conversationId } = req.params
@@ -415,6 +485,7 @@ export const sendMessage = async (req, res) => {
       return res.status(403).json({ message: "Not a member of this chat room" })
     }
 
+    // Create message with full relations
     const message = await prisma.chatMessage.create({
       data: {
         chatRoomId: chatRoomId,
@@ -429,24 +500,91 @@ export const sendMessage = async (req, res) => {
             lastName: true,
             email: true,
             role: true,
+            avatar: true,
           },
         },
-        readReceipts: true,
+        readReceipts: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
+        media: true, // ✅ Include media attachments
+        reactions: true, // ✅ Include reactions
       },
     })
 
-    // Update chat room's updatedAt
+    // ✅ Update chat room's lastMessage and lastMessageAt
     await prisma.chatRoom.update({
       where: { id: chatRoomId },
-      data: { updatedAt: new Date() },
+      data: { 
+        updatedAt: new Date(),
+        lastMessageAt: new Date(),
+        lastMessageId: message.id,
+      },
     })
+
+    // ✅ Increment unread count for other members
+    const otherMembers = await prisma.chatRoomMember.findMany({
+      where: {
+        chatRoomId,
+        userId: { not: currentUserId },
+      },
+    })
+
+    await Promise.all(
+      otherMembers.map((member) =>
+        prisma.chatRoomMember.update({
+          where: { id: member.id },
+          data: {
+            unreadCount: { increment: 1 },
+          },
+        })
+      )
+    )
 
     console.log("[Chat Controller] Message created:", message.id)
 
-    // Emit socket event
+    // ✅ Emit socket event to room
     const io = req.app.get("io")
     if (io) {
       io.to(`chat-${chatRoomId}`).emit("new-message", message)
+      console.log("[Chat Controller] Emitted new-message to room:", chatRoomId)
+    }
+
+    // ✅ Create notifications for other members
+    for (const member of otherMembers) {
+      await prisma.notification.create({
+        data: {
+          userId: member.userId,
+          type: "MESSAGE",
+          title: `New message from ${req.user.firstName} ${req.user.lastName}`,
+          message: content.trim().substring(0, 100),
+          chatRoomId,
+          messageId: message.id,
+          senderId: currentUserId,
+          metadata: {
+            chatRoomId,
+            messageId: message.id,
+            senderName: `${req.user.firstName} ${req.user.lastName}`,
+          },
+        },
+      })
+
+      // ✅ Emit notification to specific user
+      if (io) {
+        io.to(`user-${member.userId}`).emit("notification", {
+          type: "MESSAGE",
+          chatRoomId,
+          messageId: message.id,
+          message,
+        })
+      }
     }
 
     res.status(201).json(message)
@@ -467,6 +605,24 @@ export const markAsRead = async (req, res) => {
 
     console.log("[Chat Controller] Mark as read - Message:", messageId, "User:", currentUserId)
 
+    // Get message details
+    const message = await prisma.chatMessage.findUnique({
+      where: { id: messageId },
+      select: { 
+        chatRoomId: true,
+        senderId: true,
+      },
+    })
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" })
+    }
+
+    // Don't create read receipt for own messages
+    if (message.senderId === currentUserId) {
+      return res.json({ message: "Cannot mark own message as read" })
+    }
+
     // Check if already read
     const existing = await prisma.readReceipt.findUnique({
       where: {
@@ -481,32 +637,132 @@ export const markAsRead = async (req, res) => {
       return res.json({ message: "Already read" })
     }
 
-    await prisma.readReceipt.create({
+    // Create read receipt
+    const receipt = await prisma.readReceipt.create({
       data: {
         messageId,
         userId: currentUserId,
       },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
     })
 
-    // Emit socket event
-    const message = await prisma.chatMessage.findUnique({
-      where: { id: messageId },
-      select: { chatRoomId: true },
+    // ✅ Decrement unread count for this user in this room
+    const member = await prisma.chatRoomMember.findUnique({
+      where: {
+        chatRoomId_userId: {
+          chatRoomId: message.chatRoomId,
+          userId: currentUserId,
+        },
+      },
     })
 
+    if (member && member.unreadCount > 0) {
+      await prisma.chatRoomMember.update({
+        where: { id: member.id },
+        data: {
+          unreadCount: { decrement: 1 },
+        },
+      })
+    }
+
+    // ✅ Emit socket event to room
     const io = req.app.get("io")
     if (io) {
       io.to(`chat-${message.chatRoomId}`).emit("message-read", {
         messageId,
         userId: currentUserId,
+        user: receipt.user,
       })
+      console.log("[Chat Controller] Emitted message-read event")
     }
 
-    res.json({ message: "Marked as read" })
+    res.json({ 
+      message: "Marked as read",
+      receipt,
+    })
   } catch (error) {
     console.error("[Chat Controller] Mark as read error:", error)
     res.status(500).json({ 
       message: "Failed to mark as read",
+      error: error.message 
+    })
+  }
+}
+
+// ✅ Mark ALL messages in a conversation as read
+export const markConversationAsRead = async (req, res) => {
+  try {
+    const { roomId, conversationId } = req.params
+    const chatRoomId = roomId || conversationId
+    const currentUserId = req.user.id
+
+    console.log("[Chat Controller] Mark all as read - Room:", chatRoomId, "User:", currentUserId)
+
+    // Get all unread messages in this room
+    const unreadMessages = await prisma.chatMessage.findMany({
+      where: {
+        chatRoomId,
+        senderId: { not: currentUserId },
+        readReceipts: {
+          none: {
+            userId: currentUserId,
+          },
+        },
+      },
+    })
+
+    // Create read receipts for all unread messages
+    await Promise.all(
+      unreadMessages.map((message) =>
+        prisma.readReceipt.create({
+          data: {
+            messageId: message.id,
+            userId: currentUserId,
+          },
+        }).catch(() => {
+          // Ignore duplicate errors
+        })
+      )
+    )
+
+    // ✅ Reset unread count to 0
+    await prisma.chatRoomMember.updateMany({
+      where: {
+        chatRoomId,
+        userId: currentUserId,
+      },
+      data: {
+        unreadCount: 0,
+      },
+    })
+
+    // ✅ Emit socket event
+    const io = req.app.get("io")
+    if (io) {
+      unreadMessages.forEach((message) => {
+        io.to(`chat-${chatRoomId}`).emit("message-read", {
+          messageId: message.id,
+          userId: currentUserId,
+        })
+      })
+    }
+
+    res.json({ 
+      message: "All messages marked as read",
+      count: unreadMessages.length,
+    })
+  } catch (error) {
+    console.error("[Chat Controller] Mark all as read error:", error)
+    res.status(500).json({ 
+      message: "Failed to mark all as read",
       error: error.message 
     })
   }

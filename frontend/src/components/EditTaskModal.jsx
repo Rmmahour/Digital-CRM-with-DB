@@ -36,6 +36,37 @@ export default function EditTaskModal({ task, onClose, onTaskUpdated }) {
     }
   }
 
+  const handleUpdateDueDate = async (e) => {
+      const newDueDate = e.target.value
+      try {
+        const updated = await tasksAPI.updateDueDate(id, newDueDate)
+        setTask(updated)
+        setEditingDueDate(false)
+      } catch (error) {
+        console.error("[v0] Failed to update due date:", error)
+        alert(error.response?.data?.message || "Failed to update due date")
+      }
+    }
+  
+    const handleUpdatePublishDate = async (e) => {
+      const newPublishDate = e.target.value
+      try {
+        const updated = await tasksAPI.updatePublishDate(id, newPublishDate)
+        setTask(updated)
+        setEditingPublishDate(false)
+      } catch (error) {
+        console.error("[v0] Failed to update publish date:", error)
+        alert(error.response?.data?.message || "Failed to update publish date")
+      }
+    }
+  
+    // Helper function to format date for input[type="date"]
+  const formatDateForInput = (date) => {
+    if (!date) return ''
+    const d = new Date(date)
+    return d.toISOString().split('T')[0]
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
@@ -171,6 +202,8 @@ export default function EditTaskModal({ task, onClose, onTaskUpdated }) {
               type="date"
               value={formData.dueDate}
               onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+              min={formatDateForInput(task.createdAt)}
+              max={task.publishDate ? formatDateForInput(task.publishDate) : undefined}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             />
           </div>

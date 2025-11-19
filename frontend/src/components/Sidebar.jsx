@@ -2,6 +2,7 @@
 
 import { Link, useLocation } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
+import logo from "../../public/abacusdesk-logo.svg"
 import {
   LayoutDashboard,
   Users,
@@ -14,6 +15,7 @@ import {
   Users2,
   Trash2,
 } from "lucide-react"
+
 
 export default function Sidebar() {
   const { user, logout } = useAuth()
@@ -61,8 +63,10 @@ export default function Sidebar() {
   return (
     <div className="w-64 bg-background border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
-        {/* <img src="abacusdesk-logo.svg" alt="Abacus CRM" className="w-32 h-auto mb-2" /> */}
-        <h1 className="text-2xl font-bold text-primary">Abacus CRM</h1>
+        <div className="flex flex-wrap sm:flex-nowrap justify-center align-center mb-4 gap-3">
+          <img src={logo} alt="Abacus CRM" className="w-16 h-16" />
+          <h1 className="text-xl font-bold text-primary align-center items-center">Abacus Desk CRM</h1>
+        </div>
         <p className="text-sm text-text-secondary mt-1">{user?.role?.replace("_", " ")}</p>
       </div>
 
@@ -75,9 +79,8 @@ export default function Sidebar() {
             <Link
               key={item.name}
               to={item.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive ? "bg-primary text-white" : "text-text-secondary hover:bg-surface"
-              }`}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${isActive ? "bg-primary text-white" : "text-text-secondary hover:bg-surface"
+                }`}
             >
               <Icon className="w-5 h-5" />
               <span className="font-medium">{item.name}</span>
@@ -87,18 +90,21 @@ export default function Sidebar() {
       </nav>
 
       <div className="p-4 border-t border-border">
-        <div className="mb-4 p-3 bg-surface rounded-lg">
-          <p className="text-sm font-medium flex items-center gap-2">
-            {user?.avatar && (
+        <div className="flex bg-surface rounded-lg gap-2 py-4 items-center">
+          {user?.avatar ? (
               <img
-                src={user.avatar || "/placeholder.svg"}
-                alt={user.firstName}
-                className="w-6 h-6 rounded-full object-cover"
+                src={user.avatar}
+                alt={user.firstName || "User"}
+                className="w-12 h-12 rounded-full object-cover"
               />
+            ) : (
+              <User className="w-12 h-12 text-blue-600 bg-gray-400 rounded-full p-2" />
             )}
-            {user?.firstName} {user?.lastName}
-          </p>
-          <p className="text-xs text-text-secondary">{user?.email}</p>
+          <div className="text-sm font-medium items-center gap-2 text-xl">
+            <p>{user?.firstName} {user?.lastName}</p>
+            <p className="text-xs text-text-secondary">{user?.email}</p>
+          </div>
+          
         </div>
         <button
           onClick={logout}

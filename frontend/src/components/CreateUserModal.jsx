@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X } from "lucide-react"
+import { X, Eye, EyeOff } from "lucide-react"
 import { usersAPI } from "../services/api"
 
 const ROLES = [
@@ -14,16 +14,18 @@ const ROLES = [
   { value: "CLIENT_VIEWER", label: "Client Viewer" },
 ]
 
-export default function CreateUserModal({ isOpen, onClose, onSuccess }) {
+export default function CreateUserModal({ brands, isOpen, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
     firstName: "",
     lastName: "",
     role: "CLIENT_VIEWER",
+    brandId: "",
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -40,6 +42,7 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }) {
         firstName: "",
         lastName: "",
         role: "CLIENT_VIEWER",
+        brandId: "",
       })
     } catch (err) {
       setError(err.response?.data?.message || "Failed to create user")
@@ -70,20 +73,32 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }) {
               required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium mb-2">Password *</label>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
               minLength={6}
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors text-center p-1"
+              tabIndex={-1}
+            >
+              {showPassword ? (
+                <EyeOff className="w-5 h-5 dark:text-black" />
+              ) : (
+                <Eye className="w-5 h-5 dark:text-black" />
+              )}
+            </button>
           </div>
 
           <div>
@@ -93,7 +108,7 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }) {
               required
               value={formData.firstName}
               onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
@@ -104,7 +119,7 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }) {
               required
               value={formData.lastName}
               onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
@@ -113,7 +128,7 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }) {
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               {ROLES.map((role) => (
                 <option key={role.value} value={role.value}>
@@ -122,6 +137,29 @@ export default function CreateUserModal({ isOpen, onClose, onSuccess }) {
               ))}
             </select>
           </div>
+
+
+          {/* {formData.role === "CLIENT_VIEWER" & (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Brand *</label>
+              <select
+                value={formData.brandId}
+                onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
+                required
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Select brand</option>
+                {brands.map((brand) => (
+                  <option key={brand.id} value={brand.id}>
+                    {brand.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )} */}
+
+
+
 
           <div className="flex gap-3 pt-4">
             <button

@@ -104,14 +104,14 @@ export default function TeamsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {teams.map((team) => (
-          <div key={team.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div key={team.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 dark:bg-gray-800 dark:text-gray-400">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                   <Users className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg dark:text-black">{team.name}</h3>
+                  <h3 className="font-semibold text-lg">{team.name}</h3>
                   <p className="text-sm text-gray-500">
                     {team._count?.members || team.members?.length || 0} members
                   </p>
@@ -142,10 +142,10 @@ export default function TeamsPage() {
             {team.description && <p className="text-sm text-gray-600 mb-4">{team.description}</p>}
 
             {team.leader && (
-              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg mb-3">
+              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg mb-3 dark:bg-gray-900">
                 <Shield className="w-4 h-4 text-gray-600" />
                 <div className="flex-1">
-                  <p className="text-sm font-medium dark:text-black">Team Leader</p>
+                  <p className="text-sm font-medium">Team Leader</p>
                   <p className="text-xs text-gray-600">
                     {team.leader.firstName} {team.leader.lastName}
                   </p>
@@ -300,7 +300,7 @@ function ManageMembersModal({ team, users, onClose }) {
               <h2 className="text-2xl font-bold">Manage Team Members</h2>
               <p className="text-sm text-gray-600 mt-1">{team.name}</p>
             </div>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg">
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:text-gray-900 rounded-lg">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -355,7 +355,7 @@ function ManageMembersModal({ team, users, onClose }) {
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
             {filteredAvailable.length > 0 ? (
               <div className="space-y-2 max-h-60 overflow-y-auto">
@@ -449,7 +449,7 @@ function CreateTeamModal({ users, onClose, onTeamCreated }) {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               required
             />
           </div>
@@ -459,7 +459,7 @@ function CreateTeamModal({ users, onClose, onTeamCreated }) {
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               rows={3}
             />
           </div>
@@ -469,7 +469,7 @@ function CreateTeamModal({ users, onClose, onTeamCreated }) {
             <select
               value={formData.leaderId}
               onChange={(e) => setFormData({ ...formData, leaderId: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="">Select a leader (optional)</option>
               {eligibleLeaders.map((user) => (
@@ -542,7 +542,7 @@ function EditTeamModal({ team, users, onClose, onTeamUpdated }) {
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               required
             />
           </div>
@@ -552,7 +552,7 @@ function EditTeamModal({ team, users, onClose, onTeamUpdated }) {
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               rows={3}
             />
           </div>
@@ -562,7 +562,7 @@ function EditTeamModal({ team, users, onClose, onTeamUpdated }) {
             <select
               value={formData.leaderId}
               onChange={(e) => setFormData({ ...formData, leaderId: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               <option value="">Select a leader (optional)</option>
               {eligibleLeaders.map((user) => (
@@ -579,7 +579,7 @@ function EditTeamModal({ team, users, onClose, onTeamUpdated }) {
               id="isActive"
               checked={formData.isActive}
               onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-              className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
             <label htmlFor="isActive" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Team is Active

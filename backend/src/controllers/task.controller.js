@@ -1,6 +1,7 @@
 import prisma from "../config/prisma.js"
 import { uploadToCloudinary } from "../config/upload.js"
 import { notifyTaskAssigned, notifyTaskCompleted } from "../services/notificationService.js"
+import { getDefaultTimeEstimate } from "../utils/timeEstimates.js"
 
 export const getAllTasks = async (req, res, next) => {
   try {
@@ -177,10 +178,16 @@ export const createTask = async (req, res, next) => {
       // referenceUpload,
       notes,
       references,
+      estimatedTime,
     } = req.body
 
     if (!title || !brandId) {
       return res.status(400).json({ message: "Title and brand are required" })
+    }
+
+    let finalEstimatedTime = estimatedTime
+    if (!finalEstimatedTime && contentType) {
+      finalEstimatedTime = getDefaultTimeEstimate(contentType)
     }
 
     if (assignedToId) {
@@ -216,6 +223,7 @@ export const createTask = async (req, res, next) => {
         // referenceUpload: referenceUpload || null,
         notes: notes || null,
         references: references || null,
+        estimatedTime: finalEstimatedTime,
       },
       include: {
         brand: true,
@@ -834,13 +842,71 @@ export const updateTaskDueDate = async (req, res, next) => {
     const { id } = req.params
     const { dueDate } = req.body
 
+    // Get the existing task to check createdAt and publishDate
+    const existingTask = await prisma.task.findUnique({
+      where: { id },
+      select: { createdAt: true, publishDate: true }
+    })
+
+    if (!existingTask) {
+      return res.status(404).json({ message: "Task not found" })
+    }
+
+    // Validate dueDate
+    if (dueDate) {
+      const newDueDate = new Date(dueDate)
+      const createdAt = new Date(existingTask.createdAt)
+      
+      // Reset time to start of day for comparison
+      newDueDate.setHours(0, 0, 0, 0)
+      createdAt.setHours(0, 0, 0, 0)
+      
+      // Check if dueDate is in the past
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      if (newDueDate < today) {
+        return res.status(400).json({ 
+          message: "Due date cannot be in the past" 
+        })
+      }
+
+      // Check if dueDate is greater than createdAt
+      if (newDueDate <= createdAt) {
+        return res.status(400).json({ 
+          message: "Due date must be greater than the task creation date" 
+        })
+      }
+
+      // Check if publishDate exists and is greater than the new dueDate
+      if (existingTask.publishDate) {
+        const publishDate = new Date(existingTask.publishDate)
+        publishDate.setHours(0, 0, 0, 0)
+        
+        if (publishDate <= newDueDate) {
+          return res.status(400).json({ 
+            message: "Due date must be less than the publish date" 
+          })
+        }
+      }
+    }
+
     const task = await prisma.task.update({
       where: { id },
       data: { dueDate: dueDate ? new Date(dueDate) : null },
       include: {
         brand: true,
-        assignedTo: true,
-      createdBy: {  // ✅ ADD THIS
+        assignedTo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            avatar: true,
+          },
+        },
+        createdBy: {  // ✅ ADD THIS
           select: {
             id: true,
             firstName: true,
@@ -1048,6 +1114,61 @@ export const updatePublishDate = async (req, res, next) => {
       return res.status(403).json({ message: "Only admins and managers can change publish date" })
     }
 
+    // Get the existing task to check dueDate
+    const existingTask = await prisma.task.findUnique({
+      where: { id },
+      select: { dueDate: true, createdAt: true }
+    })
+
+    if (!existingTask) {
+      return res.status(404).json({ message: "Task not found" })
+    }
+
+    // Validate publishDate
+    if (publishDate) {
+      const newPublishDate = new Date(publishDate)
+      
+      // Reset time to start of day for comparison
+      newPublishDate.setHours(0, 0, 0, 0)
+      
+      // Check if publishDate is in the past
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      if (newPublishDate < today) {
+        return res.status(400).json({ 
+          message: "Publish date cannot be in the past" 
+        })
+      }
+
+      // Check if dueDate exists
+      if (!existingTask.dueDate) {
+        return res.status(400).json({ 
+          message: "Cannot set publish date without a due date. Please set due date first." 
+        })
+      }
+
+      // Check if publishDate is greater than dueDate
+      const dueDate = new Date(existingTask.dueDate)
+      dueDate.setHours(0, 0, 0, 0)
+      
+      if (newPublishDate <= dueDate) {
+        return res.status(400).json({ 
+          message: "Publish date must be greater than the due date" 
+        })
+      }
+
+      // Check if publishDate is greater than createdAt
+      const createdAt = new Date(existingTask.createdAt)
+      createdAt.setHours(0, 0, 0, 0)
+      
+      if (newPublishDate <= createdAt) {
+        return res.status(400).json({ 
+          message: "Publish date must be greater than the task creation date" 
+        })
+      }
+    }
+
     const task = await prisma.task.update({
       where: { id },
       data: { publishDate: publishDate ? new Date(publishDate) : null },
@@ -1074,6 +1195,9 @@ export const updatePublishDate = async (req, res, next) => {
         },
       },
     })
+
+    const io = req.app.get("io")
+    io.emit("task:update", task)
 
     res.json(task)
   } catch (error) {
@@ -1363,6 +1487,117 @@ export const getTaskById = async (req, res, next) => {
     res.json(task)
   } catch (error) {
     console.error('[v0] getTaskById error:', error)
+    next(error)
+  }
+}
+
+export const updateEstimatedTime = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { estimatedTime } = req.body
+
+    // Only admins and managers can update estimated time
+    if (!["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"].includes(req.user.role)) {
+      return res.status(403).json({ 
+        message: "Only admins and managers can update estimated time" 
+      })
+    }
+
+    const task = await prisma.task.update({
+      where: { id },
+      data: { estimatedTime: parseFloat(estimatedTime) },
+      include: {
+        brand: true,
+        assignedTo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            avatar: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
+      },
+    })
+
+    res.json(task)
+  } catch (error) {
+    next(error)
+  }
+}
+
+// ✅ Add new endpoint to update actual time (by taskers)
+export const updateActualTime = async (req, res, next) => {
+  try {
+    const { id } = req.params
+    const { actualTime } = req.body
+
+    const task = await prisma.task.findUnique({
+      where: { id },
+      select: { assignedToId: true }
+    })
+
+    // Only assigned user can update actual time
+    if (task.assignedToId !== req.user.id && !["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"].includes(req.user.role)) {
+      return res.status(403).json({ 
+        message: "Only assigned user can update actual time" 
+      })
+    }
+
+    const updatedTask = await prisma.task.update({
+      where: { id },
+      data: { actualTime: parseFloat(actualTime) },
+      include: {
+        brand: true,
+        assignedTo: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            role: true,
+            avatar: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            role: true,
+            avatar: true,
+          },
+        },
+      },
+    })
+
+    // Log activity
+    await prisma.activityLog.create({
+      data: {
+        action: "UPDATE",
+        entity: "Task",
+        entityId: id,
+        userId: req.user.id,
+        metadata: {
+          actualTime: parseFloat(actualTime),
+          estimatedTime: updatedTask.estimatedTime,
+          timeDifference: parseFloat(actualTime) - (updatedTask.estimatedTime || 0),
+        },
+      },
+    })
+
+    res.json(updatedTask)
+  } catch (error) {
     next(error)
   }
 }

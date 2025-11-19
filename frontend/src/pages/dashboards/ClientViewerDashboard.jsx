@@ -96,7 +96,7 @@ export default function ClientViewerDashboard() {
           </div>
         </div> */}
 
-          <TeamActivityWidget />
+          {/* <TeamActivityWidget /> */}
 
       </div>
     </div>

@@ -28,9 +28,14 @@ export default function AccountManagerDashboard() {
 
   const loadDashboard = async () => {
     try {
-      const [brands, tasksResponse] = await Promise.all([brandsAPI.getAll(), tasksAPI.getAll({ limit: 1000 })])
+      // const [brands, tasksResponse] = await Promise.all([brandsAPI.getAll(), tasksAPI.getAll({ limit: 1000 })])
 
-      const tasks = tasksResponse.tasks || tasksResponse
+      const [brandsResponse, tasksResponse] = await Promise.all([brandsAPI.getAll(), tasksAPI.getAll()])
+            
+            // ✅ Ensure we have arrays before using array methods
+            const brands = Array.isArray(brandsResponse) ? brandsResponse : []
+            const tasks = Array.isArray(tasksResponse) ? tasksResponse : []
+
 
       const now = new Date()
       const weekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)

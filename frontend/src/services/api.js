@@ -1,6 +1,7 @@
 import axios from "axios"
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+import { formatTime, getDefaultTimeEstimate } from "../utils/timeEstimates"
 
 const api = axios.create({
   baseURL: API_URL,
@@ -89,6 +90,14 @@ export const usersAPI = {
   },
   delete: async (id) => {
     const { data } = await api.delete(`/users/${id}`)
+    return data
+  },
+  uploadProfile: async (formData) => {
+    const { data } = await api.post("/users/upload-profile", formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
     return data
   },
 }
@@ -240,6 +249,16 @@ export const tasksAPI = {
   
   deleteFinalCreative: async (creativeId) => {
     const response = await api.delete(`/tasks/final-creative/${creativeId}`)
+    return response.data
+  },
+
+  updateEstimatedTime: async (id, estimatedTime) => {
+    const response = await api.patch(`/tasks/${id}/estimated-time`, { estimatedTime })
+    return response.data
+  },
+  
+  updateActualTime: async (id, actualTime) => {
+    const response = await api.patch(`/tasks/${id}/actual-time`, { actualTime })
     return response.data
   },
 

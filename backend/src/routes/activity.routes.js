@@ -8,7 +8,7 @@ router.use(authenticate)
 
 // Only Super Admin and Admin can view activity logs
 router.use((req, res, next) => {
-  if (!["SUPER_ADMIN", "ADMIN"].includes(req.user.role)) {
+  if (!["SUPER_ADMIN", "ADMIN","ACCOUNT_MANAGER"].includes(req.user.role)) {
     return res.status(403).json({ message: "Access denied" })
   }
   next()

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { X } from "lucide-react"
 import { tasksAPI } from "../services/api"
 import { format } from "date-fns"
+import { getDefaultTimeEstimate, formatTime } from "../utils/timeEstimates"
 
 export default function CreateTaskModal({ brands, users, onClose, onTaskCreated }) {
   const [formData, setFormData] = useState({
@@ -15,10 +16,20 @@ export default function CreateTaskModal({ brands, users, onClose, onTaskCreated 
     assignedToId: "",
     dueDate: "",
     references: "",
+    contentType: "",
+    estimatedTime: "",
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const today = format(new Date(), "yyyy-MM-dd")
+
+  useEffect(() => {
+  if (formData.contentType) {
+    const defaultTime = getDefaultTimeEstimate(formData.contentType)
+    setFormData(prev => ({ ...prev, estimatedTime: defaultTime }))
+  }
+}, [formData.contentType])
+  
 
   useEffect(() => {
     const resetFormData = () => {
@@ -31,6 +42,8 @@ export default function CreateTaskModal({ brands, users, onClose, onTaskCreated 
         assignedToId: "",
         dueDate: "",
         references: "",
+        contentType: "",
+        estimatedTime: "",
       })
       setError("")
     }
@@ -63,6 +76,7 @@ export default function CreateTaskModal({ brands, users, onClose, onTaskCreated 
       const taskData = {
         ...formData,
         assignedToId: formData.assignedToId || null,
+        estimatedTime: formData.estimatedTime ? parseFloat(formData.estimatedTime) : null,
       }
       const newTask = await tasksAPI.create(taskData)
       onTaskCreated(newTask)
@@ -101,7 +115,7 @@ export default function CreateTaskModal({ brands, users, onClose, onTaskCreated 
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               placeholder="Enter task title"
             />
           </div>
@@ -126,6 +140,47 @@ export default function CreateTaskModal({ brands, users, onClose, onTaskCreated 
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="Add reference links or notes"
             />
+          </div>
+
+          {/* ✅ Content Type with auto time estimation */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Content Type</label>
+              <select
+                value={formData.contentType}
+                onChange={(e) => setFormData({ ...formData, contentType: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="">Select type</option>
+                <option value="STATIC">Static (1.5h default)</option>
+                <option value="REEL">Reel (2.5h default)</option>
+                <option value="STORY">Story (1h default)</option>
+                <option value="CAROUSEL">Carousel (2h default)</option>
+                <option value="BLOG_POST">Blog Post (1h default)</option>
+                <option value="VIDEO">Video (3h default)</option>
+                <option value="OTHER">Other (1h default)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Estimated Time (hours)
+              </label>
+              <input
+                type="number"
+                step="0.5"
+                min="0"
+                value={formData.estimatedTime}
+                onChange={(e) => setFormData({ ...formData, estimatedTime: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                placeholder="Auto-set based on type"
+              />
+              {/* {formData.estimatedTime && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {formatTime(parseFloat(formData.estimatedTime))}
+                </p>
+              )} */}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

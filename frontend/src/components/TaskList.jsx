@@ -91,6 +91,11 @@ export default function TaskList({ tasks, title = "Recent Tasks", onTaskClick })
                     {task._count.comments} {task._count.comments === 1 ? "comment" : "comments"}
                   </span>
                 )}
+                {task.assignedToId && (
+                  <span className="text-text-secondary">
+                    {task.assignedTo.firstName} {task.assignedTo.lastName}
+                  </span>
+                )}
               </div>
             </div>
           )

@@ -271,9 +271,8 @@ export default function CalendarPage() {
           <div className="flex items-center gap-2 overflow-x-auto">
             <button
               onClick={() => setSelectedMonth(null)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-                selectedMonth === null ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${selectedMonth === null ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
             >
               All Tasks ({calendar.tasks?.length || 0})
             </button>
@@ -284,9 +283,8 @@ export default function CalendarPage() {
                 <button
                   key={month}
                   onClick={() => setSelectedMonth(month)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${
-                    selectedMonth === month ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors whitespace-nowrap ${selectedMonth === month ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
                 >
                   {month} ({count})
                 </button>
@@ -303,11 +301,16 @@ export default function CalendarPage() {
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">#</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Idea</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Created Date</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Type</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Assigned To</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Copy</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Description</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Copy Idea / Post Copy</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Caption</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Creative Reference</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Reference</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Due Date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Publish Date</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-700 uppercase">Actions</th>
               </tr>
@@ -319,7 +322,7 @@ export default function CalendarPage() {
                     <td className="px-4 py-3 text-sm dark:text-black">{index + 1}</td>
                     <td className="px-4 py-3 text-sm font-medium dark:text-black">{task.title}</td>
                     <td className="px-4 py-3 text-sm dark:text-black">
-                      {task.postingDate ? format(new Date(task.postingDate), "MM/dd/yyyy") : "-"}
+                      {task.createdAt ? format(new Date(task.createdAt), "MM/dd/yyyy") : "-"}
                     </td>
                     <td className="px-4 py-3">
                       <span className="inline-flex px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
@@ -377,19 +380,93 @@ export default function CalendarPage() {
                     <td className="px-4 py-3 text-sm max-w-xs dark:text-black">
                       <div className="truncate">{task.description || "-"}</div>
                     </td>
-                    <td className="px-4 py-3 text-sm dark:text-black">
-                      {task.references ? (
-                        <a
-                          href={task.references}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          View
-                        </a>
+                    <td className="px-4 py-3 text-sm max-w-xs dark:text-black">
+                      <div className="truncate text-gray-400 whitespace-pre-wrap">
+                        {task.copyIdea ? (
+                        <p className="text-gray-700 whitespace-pre-wrap">{task.copyIdea}</p>
                       ) : (
-                        "-"
+                        <p className="text-gray-400 italic">No copy idea added yet</p>
                       )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm max-w-xs dark:text-black">
+                      <div className="truncate text-gray-400 whitespace-pre-wrap">
+                        {task.caption ? (
+                        <p className="text-gray-700 whitespace-pre-wrap">{task.caption}</p>
+                      ) : (
+                        <p className="text-gray-400 italic">No Caption yet</p>
+                      )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm dark:text-black">
+                      <div>
+                        {task.creativeRef ? (
+                          <div className="space-y-2">
+                            {task.creativeRef.split('\n').map((link, index) => (
+                              link.trim() && (
+                                <a
+                                  key={index}
+                                  href={link.trim()}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block text-blue-600 hover:underline"
+                                >
+                                  {link.trim()}
+                                </a>
+                              )
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-400 italic">No creative added yet</p>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm dark:text-black">
+                      {task.attachments && task.attachments.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {task.attachments.map((attachment) => (
+                            <div
+                              key={attachment.id}
+                              className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                            >
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <span className="text-2xl">{getFileIcon(attachment.fileType)}</span>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm truncate">{attachment.fileName}</p>
+                                  <p className="text-xs text-gray-500">{formatFileSize(attachment.fileSize)}</p>
+                                  {attachment.description && <p className="text-xs text-gray-600 mt-1">{attachment.description}</p>}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <a
+                                  href={`http://localhost:5000${attachment.fileUrl}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </a>
+                                {canEditContent && (
+                                  <button
+                                    onClick={() => handleDeleteAttachment(attachment.id)}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 text-center py-8">No reference yet</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm dark:text-black">
+                      {task.dueDate ? format(new Date(task.dueDate), "MM/dd/yyyy") : "-"}
+                    </td>
+                    <td className="px-4 py-3 text-sm dark:text-black">
+                      {task.publishDate ? format(new Date(task.publishDate), "MM/dd/yyyy") : "-"}
                     </td>
                     <td className="px-4 py-3">
                       <span

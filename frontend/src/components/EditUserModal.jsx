@@ -72,7 +72,7 @@ export default function EditUserModal({ isOpen, onClose, onSuccess, user }) {
               type="email"
               value={user.email}
               disabled
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary  dark:border-gray-600 dark:bg-gray-700 dark:text-white bg-gray-100 cursor-not-allowed readonly"
             />
           </div>
 
@@ -83,7 +83,7 @@ export default function EditUserModal({ isOpen, onClose, onSuccess, user }) {
               required
               value={formData.firstName}
               onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
@@ -94,7 +94,7 @@ export default function EditUserModal({ isOpen, onClose, onSuccess, user }) {
               required
               value={formData.lastName}
               onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
@@ -103,7 +103,7 @@ export default function EditUserModal({ isOpen, onClose, onSuccess, user }) {
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             >
               {ROLES.map((role) => (
                 <option key={role.value} value={role.value}>

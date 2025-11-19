@@ -188,7 +188,9 @@ export const getMe = async (req, res, next) => {
         lastName: true,
         role: true,
         isActive: true,
+        avatar: true, 
         createdAt: true,
+        joinDate: true,
       },
     })
 

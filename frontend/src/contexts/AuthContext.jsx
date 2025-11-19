@@ -44,6 +44,19 @@ export const AuthProvider = ({ children }) => {
     return updatedUser
   }
 
+  // 🔥 ADD THIS: Function to refresh user data (for avatar updates, etc.)
+  const refreshUser = async () => {
+    try {
+      const userData = await authAPI.getMe()
+      setUser(userData)
+      console.log("User data refreshed:", userData)
+      return userData
+    } catch (error) {
+      console.error("Failed to refresh user:", error)
+      throw error
+    }
+  }
+
   const value = {
     user,
     loading,
@@ -51,6 +64,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     checkAuth,
     updateProfile,
+    refreshUser,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -52,7 +52,7 @@ export default function CreateBrandModal({ isOpen, onClose, onSuccess }) {
               required
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary  dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary  dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               placeholder="Enter brand name"
             />
           </div>
@@ -63,7 +63,7 @@ export default function CreateBrandModal({ isOpen, onClose, onSuccess }) {
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               rows={4}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary  dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               placeholder="Enter brand description"
             />
           </div>
@@ -74,7 +74,7 @@ export default function CreateBrandModal({ isOpen, onClose, onSuccess }) {
               type="url"
               value={formData.logo}
               onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary  dark:text-black"
+              className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               placeholder="https://example.com/logo.png"
             />
           </div>

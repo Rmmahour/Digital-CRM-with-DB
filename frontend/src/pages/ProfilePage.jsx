@@ -3,13 +3,18 @@
 import { useState, useEffect } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import { authAPI } from "../services/api"
-import { User, Mail, Calendar, Shield, Save, Lock } from "lucide-react"
+import { User, Mail, Calendar, Shield, Save, Lock, Eye, EyeOff } from "lucide-react"
+import ProfileImageUploader from "../components/profileImage"
 
 export default function ProfilePage() {
   const { user, updateProfile } = useAuth()
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: "", text: "" })
   const [activeTab, setActiveTab] = useState("profile")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showNewPassword2, setShowNewPassword2] = useState(false)
+
 
   const [profileData, setProfileData] = useState({
     firstName: "",
@@ -111,17 +116,19 @@ export default function ProfilePage() {
       </div>
 
       {/* User Info Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6 dark:bg-gray-800">
         <div className="flex items-center gap-4 mb-4">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-            <User className="w-8 h-8 text-blue-600" />
+            {/* <User className="w-8 h-8 text-blue-600" /> */}
+            <ProfileImageUploader defaultImage={user?.avatar} />
           </div>
           <div>
-            <h2 className="text-xl font-semibold dark:text-black">
+            <h2 className="text-xl font-semibold">
               {user?.firstName} {user?.lastName}
             </h2>
-            <p className="text-gray-600">{user?.email}</p>
+            <p className="text-gray-600 dark:text-white">{user?.email}</p>
           </div>
+          
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-gray-200">
@@ -129,14 +136,14 @@ export default function ProfilePage() {
             <Shield className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Role</p>
-              <p className="font-medium dark:text-black">{getRoleName(user?.role || "")}</p>
+              <p className="font-medium">{getRoleName(user?.role || "")}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-gray-400" />
             <div>
               <p className="text-sm text-gray-500">Member Since</p>
-              <p className="font-medium dark:text-black">{formatDate(user?.joinDate || user?.createdAt)}</p>
+              <p className="font-medium">{formatDate(user?.joinDate || user?.createdAt)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -150,26 +157,24 @@ export default function ProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 dark:bg-gray-800">
         <div className="border-b border-gray-200">
           <div className="flex">
             <button
               onClick={() => setActiveTab("profile")}
-              className={`px-6 py-3 font-medium transition-colors ${
-                activeTab === "profile"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
+              className={`px-6 py-3 font-medium transition-colors ${activeTab === "profile"
+                  ? "border-b-2 border-blue-600 text-blue-600 dark:text-gray-300"
+                  : "text-gray-600 hover:text-gray-900 dark:hover:text-gray-300 "
+                }`}
             >
               Profile Information
             </button>
             <button
               onClick={() => setActiveTab("password")}
-              className={`px-6 py-3 font-medium transition-colors ${
-                activeTab === "password"
-                  ? "border-b-2 border-blue-600 text-blue-600"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
+              className={`px-6 py-3 font-medium transition-colors ${activeTab === "password"
+                  ? "border-b-2 border-blue-600 text-blue-600 dark:text-gray-300 "
+                  : "text-gray-600 hover:text-gray-900 dark:hover:text-gray-300 "
+                }`}
             >
               Change Password
             </button>
@@ -179,11 +184,10 @@ export default function ProfilePage() {
         <div className="p-6">
           {message.text && (
             <div
-              className={`mb-4 p-4 rounded-lg ${
-                message.type === "success"
+              className={`mb-4 p-4 rounded-lg ${message.type === "success"
                   ? "bg-green-50 text-green-800 border border-green-200"
                   : "bg-red-50 text-red-800 border border-red-200"
-              }`}
+                }`}
             >
               {message.text}
             </div>
@@ -193,34 +197,34 @@ export default function ProfilePage() {
             <form onSubmit={handleProfileSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-400">First Name</label>
                   <input
                     type="text"
                     value={profileData.firstName}
                     onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-400">Last Name</label>
                   <input
                     type="text"
                     value={profileData.lastName}
                     onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-400">Email Address</label>
                 <input
                   type="email"
                   value={profileData.email}
                   onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   required
                 />
               </div>
@@ -240,40 +244,76 @@ export default function ProfilePage() {
 
           {activeTab === "password" && (
             <form onSubmit={handlePasswordSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-400">Current Password</label>
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={passwordData.currentPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors text-center p-1"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-400">New Password</label>
                 <input
-                  type="password"
+                  type={showNewPassword ? "text" : "password"}
                   value={passwordData.newPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   required
                   minLength={6}
                 />
-                <p className="text-sm text-gray-500 mt-1">Must be at least 6 characters long</p>
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute right-3 top-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors text-center p-1"
+                  tabIndex={-1}
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+                {/* <p className="text-sm text-gray-500 mt-1">Must be at least 6 characters long</p> */}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm New Password</label>
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-2 dark:text-gray-400">Confirm New Password</label>
                 <input
-                  type="password"
+                  type={showNewPassword2 ? "text" : "password"}
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                   required
                   minLength={6}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword2(!showNewPassword2)}
+                  className="absolute right-3 top-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors text-center p-1"
+                  tabIndex={-1}
+                >
+                  {showNewPassword2 ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
               </div>
 
               <div className="flex justify-end pt-4">

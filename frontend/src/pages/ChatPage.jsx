@@ -386,17 +386,17 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+    <div className="flex h-[calc(100vh-8rem)] bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden dark:border-gray-600 dark:bg-gray-700 dark:text-white">
       {/* Chat List Sidebar */}
       <div className="w-80 border-r border-gray-200 flex flex-col">
         <div className="p-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold mb-3 dark:text-black">Messages</h2>
+          <h2 className="text-xl font-bold mb-3">Messages</h2>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-black" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
             <input
               type="text"
               placeholder="Search conversations..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:text-black"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
         </div>
@@ -406,19 +406,19 @@ export default function ChatPage() {
             <button
               key={room.id}
               onClick={() => handleRoomSelect(room)}
-              className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 transition-colors border-b border-gray-100 ${
+              className={`w-full p-4 flex items-start gap-3 hover:bg-gray-50 dark:hover:text-gray-900 transition-colors border-b border-gray-100 ${
                 selectedRoom?.id === room.id ? "bg-blue-50" : ""
               }`}
             >
-              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 dark:hover:text-gray-300">
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
               <div className="flex-1 text-left min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-semibold truncate">{getChatName(room)}</h3>
+                  <h3 className="font-semibold truncate dark:text-black">{getChatName(room)}</h3>
                   {room.isGroup && <span className="text-xs text-gray-500">{room.members?.length || 0}</span>}
                 </div>
-                <p className="text-sm text-gray-600 truncate dark:text-black">{getLastMessage(room)}</p>
+                <p className="text-sm text-gray-600 truncate dark:border-gray-600 dark:text-gray-400">{getLastMessage(room)}</p>
               </div>
             </button>
           ))}
@@ -444,7 +444,7 @@ export default function ChatPage() {
                   <Users className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="font-semibold dark:text-black">{getChatName(selectedRoom)}</h3>
+                  <h3 className="font-semibold">{getChatName(selectedRoom)}</h3>
                   {typingUsers.size > 0 && <p className="text-sm text-blue-600 dark:text-black">typing...</p>}
                 </div>
               </div>
@@ -579,7 +579,7 @@ export default function ChatPage() {
                   value={newMessage}
                   onChange={handleTyping}
                   placeholder="Type a message..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 />
                 <button
                   type="submit"

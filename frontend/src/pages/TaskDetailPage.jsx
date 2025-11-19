@@ -20,6 +20,7 @@ import {
   Link as LinkIcon,
   Save,
   Check,
+  Clock
 } from "lucide-react"
 import { tasksAPI, usersAPI } from "../services/api"
 import { useAuth } from "../contexts/AuthContext"
@@ -27,6 +28,7 @@ import { useSocket } from "../contexts/SocketContext"
 import { format } from "date-fns"
 import EditTaskModal from "../components/EditTaskModal"
 import MentionInput from "../components/MentionInput"
+import { getDefaultTimeEstimate, formatTime, parseTimeToHours } from "../utils/timeEstimates"
 
 const statusColors = {
   TODO: "bg-gray-100 text-gray-800",
@@ -50,6 +52,8 @@ const priorityColors = {
   HIGH: "text-orange-600",
   URGENT: "text-red-600",
 }
+
+
 
 export default function TaskDetailPage() {
   const { id } = useParams()
@@ -82,7 +86,7 @@ export default function TaskDetailPage() {
   const [uploadingFinalCreative, setUploadingFinalCreative] = useState(false)
   const [finalCreatives, setFinalCreatives] = useState([])
 
-    const [editingStatus, setEditingStatus] = useState(false)
+  const [editingStatus, setEditingStatus] = useState(false)
   const [editingPriority, setEditingPriority] = useState(false)
   const [editingAssignee, setEditingAssignee] = useState(false)
   const [editingDueDate, setEditingDueDate] = useState(false)
@@ -95,6 +99,18 @@ export default function TaskDetailPage() {
   const [workText, setWorkText] = useState("")
   const [submittingWork, setSubmittingWork] = useState(false)
   const [references, setReferences] = useState("")
+
+  const [editingEstimatedTime, setEditingEstimatedTime] = useState(false)
+  const [editingActualTime, setEditingActualTime] = useState(false)
+
+  const isAssignedUser = async () => {
+    try {
+      const usersData = await usersAPI.getAll()
+      setUsers(usersData)
+    } catch (error) {
+      console.error("[v0] Failed to load users:", error)
+    }
+  }
 
 
   useEffect(() => {
@@ -374,39 +390,69 @@ export default function TaskDetailPage() {
 
 
   const handleUpdateDueDate = async (e) => {
-  const newDueDate = e.target.value
-  try {
-    const updated = await tasksAPI.updateDueDate(id, newDueDate)
-    setTask(updated)
-    setEditingDueDate(false)
-  } catch (error) {
-    console.error("[v0] Failed to update due date:", error)
-    alert("Failed to update due date")
+    const newDueDate = e.target.value
+    try {
+      const updated = await tasksAPI.updateDueDate(id, newDueDate)
+      setTask(updated)
+      setEditingDueDate(false)
+    } catch (error) {
+      console.error("[v0] Failed to update due date:", error)
+      alert(error.response?.data?.message || "Failed to update due date")
+    }
   }
+
+  const handleUpdatePublishDate = async (e) => {
+    const newPublishDate = e.target.value
+    try {
+      const updated = await tasksAPI.updatePublishDate(id, newPublishDate)
+      setTask(updated)
+      setEditingPublishDate(false)
+    } catch (error) {
+      console.error("[v0] Failed to update publish date:", error)
+      alert(error.response?.data?.message || "Failed to update publish date")
+    }
+  }
+
+  // Helper function to format date for input[type="date"]
+const formatDateForInput = (date) => {
+  if (!date) return ''
+  const d = new Date(date)
+  return d.toISOString().split('T')[0]
 }
 
-const handleUpdatePublishDate = async (e) => {
-  const newPublishDate = e.target.value
-  try {
-    const updated = await tasksAPI.updatePublishDate(id, newPublishDate)
-    setTask(updated)
-    setEditingPublishDate(false)
-  } catch (error) {
-    console.error("[v0] Failed to update publish date:", error)
-    alert("Failed to update publish date")
+  const handleUpdateSocialStatus = async (newSocialStatus) => {
+    try {
+      const updated = await tasksAPI.updateSocialStatus(id, newSocialStatus)
+      setTask(updated)
+      setEditingSocialStatus(false)
+    } catch (error) {
+      console.error("[v0] Failed to update social status:", error)
+      alert("Failed to update social status")
+    }
   }
-}
 
-const handleUpdateSocialStatus = async (newSocialStatus) => {
-  try {
-    const updated = await tasksAPI.updateSocialStatus(id, newSocialStatus)
-    setTask(updated)
-    setEditingSocialStatus(false)
-  } catch (error) {
-    console.error("[v0] Failed to update social status:", error)
-    alert("Failed to update social status")
+
+  const handleUpdateEstimatedTime = async (value) => {
+    try {
+      const updated = await tasksAPI.updateEstimatedTime(id, parseFloat(value))
+      setTask(updated)
+      setEditingEstimatedTime(false)
+    } catch (error) {
+      console.error("[v0] Failed to update estimated time:", error)
+      alert("Failed to update estimated time")
+    }
   }
-}
+
+  const handleUpdateActualTime = async (value) => {
+    try {
+      const updated = await tasksAPI.updateActualTime(id, parseFloat(value))
+      setTask(updated)
+      setEditingActualTime(false)
+    } catch (error) {
+      console.error("[v0] Failed to update actual time:", error)
+      alert("Failed to update actual time")
+    }
+  }
 
 
   const formatFileSize = (bytes) => {
@@ -455,16 +501,16 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
   const canManage = ["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER"].includes(user.role)
 
   const canEditContent = ["SUPER_ADMIN", "ADMIN", "ACCOUNT_MANAGER", "WRITER"].includes(user.role)
-  
+
   const isAssignedDesigner = task.assignedToId === user.id && user.role === "DESIGNER"
 
   return (
     <div className="space-y-6">
-      
+
       <div className="flex items-center justify-between">
         <button
           onClick={() => navigate("/dashboard/tasks")}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors dark:text-gray-300 dark:hover:text-white"
         >
           <ArrowLeft className="w-5 h-5" />
           Back to Tasks
@@ -474,7 +520,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowEditModal(true)}
-              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors  dark:hover:text-black"
             >
               <Edit2 className="w-4 h-4" />
               Edit
@@ -493,10 +539,10 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
       </div>
 
       {/* Main Task Info */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white rounded-lg border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
         <div className="flex items-start justify-between mb-6">
           <div className="flex-1">
-            <h1 className="text-3xl font-bold mb-3 dark:text-black">{task.title}</h1>
+            <h1 className="text-3xl font-bold mb-3">{task.title}</h1>
             <div className="flex items-center gap-3 flex-wrap">
               {/* Task Status */}
               {editingStatus && canManage ? (
@@ -504,7 +550,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                   <select
                     value={task.status}
                     onChange={(e) => handleUpdateStatus(e.target.value)}
-                    className="px-3 py-1 border border-blue-500 rounded-full text-sm dark:text-black"
+                    className="px-3 py-1 border border-blue-500 rounded-full text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     autoFocus
                   >
                     <option value="TODO">TODO</option>
@@ -534,7 +580,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                   <select
                     value={task.priority}
                     onChange={(e) => handleUpdatePriority(e.target.value)}
-                    className="px-3 py-1 border border-blue-500 rounded-full text-sm dark:text-black"
+                    className="px-3 py-1 border border-blue-500 rounded-full text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     autoFocus
                   >
                     <option value="LOW">LOW</option>
@@ -563,7 +609,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                   <select
                     value={task.socialStatus || "DRAFT"}
                     onChange={(e) => handleUpdateSocialStatus(e.target.value)}
-                    className="px-3 py-1 border border-blue-500 rounded-full text-sm dark:text-black"
+                    className="px-3 py-1 border border-blue-500 rounded-full text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                     autoFocus
                   >
                     <option value="DRAFT">DRAFT</option>
@@ -593,24 +639,24 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
           <div className="space-y-4">
             {/* Brand */}
             <div className="flex items-center gap-3 text-gray-600">
-              <Briefcase className="w-5 h-5" />
+              <Briefcase className="w-5 h-5 dark:text-gray-400" />
               <div>
-                <p className="text-xs">Brand</p>
-                <p className="text-gray-900 font-medium">{task.brand?.name}</p>
+                <p className="text-xs dark:text-gray-400">Brand</p>
+                <p className="text-gray-900 font-medium dark:border-gray-600 dark:bg-gray-700 dark:text-white">{task.brand?.name}</p>
               </div>
             </div>
 
             {/* Assigned To */}
             <div className="flex items-center gap-3 text-gray-600">
-              <User className="w-5 h-5" />
+              <User className="w-5 h-5 dark:text-gray-400" />
               <div className="flex-1">
-                <p className="text-xs">Assigned To</p>
+                <p className="text-xs dark:text-gray-400">Assigned To</p>
                 {editingAssignee && canManage ? (
                   <div className="flex items-center gap-2">
                     <select
                       value={task.assignedToId || ""}
                       onChange={(e) => handleUpdateAssignee(e.target.value)}
-                      className="px-3 py-1 border border-blue-500 rounded text-sm dark:text-black"
+                      className="px-3 py-1 border border-blue-500 rounded text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                       autoFocus
                     >
                       <option value="">Not assigned</option>
@@ -630,7 +676,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                     className={`text-left ${canManage ? "hover:text-blue-600" : ""}`}
                   >
                     {task.assignedTo ? (
-                      <p className="text-gray-900 font-medium">
+                      <p className="text-gray-900 font-medium dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                         {task.assignedTo.firstName} {task.assignedTo.lastName}
                         <span className="ml-2 text-xs text-gray-500">({task.assignedTo.role})</span>
                         {canManage && <ChevronDown className="w-3 h-3 inline ml-1" />}
@@ -648,10 +694,10 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
 
             {/* Created By */}
             <div className="flex items-center gap-3 text-gray-600">
-              <User className="w-5 h-5" />
+              <User className="w-5 h-5 dark:text-gray-400" />
               <div>
-                <p className="text-xs">Created By</p>
-                <p className="text-gray-900 font-medium">
+                <p className="text-xs dark:text-gray-400">Created By</p>
+                <p className="text-gray-900 font-medium dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                   {task.createdBy?.firstName} {task.createdBy?.lastName}
                 </p>
               </div>
@@ -661,16 +707,18 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
           <div className="space-y-4">
             {/* Due Date */}
             <div className="flex items-center gap-3 text-gray-600">
-              <Calendar className="w-5 h-5" />
+              <Calendar className="w-5 h-5 dark:text-gray-400" />
               <div className="flex-1">
-                <p className="text-xs">Due Date</p>
+                <p className="text-xs dark:text-gray-400">Due Date</p>
                 {editingDueDate && canManage ? (
                   <div className="flex items-center gap-2">
                     <input
                       type="date"
                       defaultValue={task.dueDate ? format(new Date(task.dueDate), "yyyy-MM-dd") : ""}
                       onChange={handleUpdateDueDate}
-                      className="px-3 py-1 border border-blue-500 rounded text-sm"
+                      className="px-3 py-1 border border-blue-500 rounded text-sm dark:border-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      min={formatDateForInput(task.createdAt)}
+                      max={task.publishDate ? formatDateForInput(task.publishDate) : undefined} 
                       autoFocus
                     />
                     <button onClick={() => setEditingDueDate(false)} className="text-gray-500">
@@ -683,7 +731,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                     className={`text-left ${canManage ? "hover:text-blue-600" : ""}`}
                   >
                     {task.dueDate ? (
-                      <p className="text-gray-900 font-medium">
+                      <p className="text-gray-900 font-medium dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                         {format(new Date(task.dueDate), "MMMM d, yyyy")}
                         {canManage && <ChevronDown className="w-3 h-3 inline ml-1" />}
                       </p>
@@ -700,19 +748,20 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
 
             {/* Publish Date */}
             <div className="flex items-center gap-3 text-gray-600">
-              <Calendar className="w-5 h-5" />
+              <Calendar className="w-5 h-5 dark:text-gray-400" />
               <div className="flex-1">
-                <p className="text-xs">Publish Date</p>
+                <p className="text-xs dark:text-gray-400">Publish Date</p>
                 {editingPublishDate && canManage ? (
                   <div className="flex items-center gap-2">
                     <input
                       type="date"
                       defaultValue={task.publishDate ? format(new Date(task.publishDate), "yyyy-MM-dd") : ""}
                       onChange={handleUpdatePublishDate}
-                      className="px-3 py-1 border border-blue-500 rounded text-sm"
+                      className="px-3 py-1 border border-blue-500 rounded text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                      min={formatDateForInput(task.dueDate || task.createdAt)}
                       autoFocus
                     />
-                    <button onClick={() => setEditingPublishDate(false)} className="text-gray-500">
+                    <button onClick={() => setEditingPublishDate(false)} className="text-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                       <X className="w-4 h-4" />
                     </button>
                   </div>
@@ -722,7 +771,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                     className={`text-left ${canManage ? "hover:text-blue-600" : ""}`}
                   >
                     {task.publishDate ? (
-                      <p className="text-gray-900 font-medium">
+                      <p className="text-gray-900 font-medium dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                         {format(new Date(task.publishDate), "MMMM d, yyyy")}
                         {canManage && <ChevronDown className="w-3 h-3 inline ml-1" />}
                       </p>
@@ -739,10 +788,10 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
 
             {/* Created At */}
             <div className="flex items-center gap-3 text-gray-600">
-              <Calendar className="w-5 h-5" />
+              <Calendar className="w-5 h-5 dark:text-gray-400" />
               <div>
-                <p className="text-xs">Created At</p>
-                <p className="text-gray-900 font-medium">
+                <p className="text-xs dark:text-gray-400">Created At</p>
+                <p className="text-gray-900 font-medium dark:border-gray-600 dark:bg-gray-700 dark:text-white">
                   {format(new Date(task.createdAt), "MMMM d, yyyy")}
                 </p>
               </div>
@@ -753,320 +802,548 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
         {/* Description */}
         {task.description && (
           <div className="border-t border-gray-200 pt-6">
-            <h3 className="text-lg font-semibold mb-3 dark:text-black">Description</h3>
-            <p className="text-gray-600 leading-relaxed">{task.description}</p>
+            <h3 className="text-lg font-semibold mb-3 dark:border-gray-600 dark:bg-gray-700 dark:text-white">Description</h3>
+            <p className="text-gray-600 leading-relaxed dark:border-gray-600 dark:bg-gray-700 dark:text-white">{task.description}</p>
           </div>
         )}
       </div>
 
-<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-      {/* Copy Idea Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold dark:text-black">Copy Idea / Post Copy</h3>
-          </div>
-          {canEditContent && !editingCopyIdea && (
-            <button
-              onClick={() => setEditingCopyIdea(true)}
-              className="text-sm text-blue-600 hover:text-blue-700"
-            >
-              Edit
-            </button>
-          )}
-        </div>
-
-        {editingCopyIdea ? (
-          <div className="space-y-3">
-            <textarea
-              value={copyIdea}
-              onChange={(e) => setCopyIdea(e.target.value)}
-              placeholder="Write your copy idea or post copy here..."
-              rows={6}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSaveCopyIdea}
-                disabled={savingCopyIdea}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                <Save className="w-4 h-4" />
-                {savingCopyIdea ? "Saving..." : "Save"}
-              </button>
-              <button
-                onClick={() => {
-                  setEditingCopyIdea(false)
-                  setCopyIdea(task.copyIdea || "")
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div>
-            {task.copyIdea ? (
-              <p className="text-gray-700 whitespace-pre-wrap">{task.copyIdea}</p>
-            ) : (
-              <p className="text-gray-400 italic">No copy idea added yet</p>
-            )}
-          </div>
-        )}
-      </div>
-
-            {/* Caption Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <FileText className="w-5 h-5 text-indigo-600" />
-            <h3 className="text-lg font-semibold dark:text-black">Caption</h3>
-          </div>
-          {canEditContent && !editingCaption && (
-            <button
-              onClick={() => setEditingCaption(true)}
-              className="text-sm text-blue-600 hover:text-blue-700"
-            >
-              Edit
-            </button>
-          )}
-        </div>
-
-        {editingCaption ? (
-          <div className="space-y-3">
-            <textarea
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              placeholder="Write the final caption for this post..."
-              rows={6}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSaveCaption}
-                disabled={savingCaption}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                <Save className="w-4 h-4" />
-                {savingCaption ? "Saving..." : "Save"}
-              </button>
-              <button
-                onClick={() => {
-                  setEditingCaption(false)
-                  setCaption(task.caption || "")
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div>
-            {task.caption ? (
-              <p className="text-gray-700 whitespace-pre-wrap">{task.caption}</p>
-            ) : (
-              <p className="text-gray-400 italic">No caption added yet</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-
-      {/* Creative Reference Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <LinkIcon className="w-5 h-5 text-purple-600" />
-            <h3 className="text-lg font-semibold dark:text-black">Creative Reference</h3>
-          </div>
-          {canEditContent && !editingCreativeRef && (
-            <button
-              onClick={() => setEditingCreativeRef(true)}
-              className="text-sm text-blue-600 hover:text-blue-700"
-            >
-              Edit
-            </button>
-          )}
-        </div>
-
-        {editingCreativeRef ? (
-          <div className="space-y-3">
-            <textarea
-              value={creativeRef}
-              onChange={(e) => setCreativeRef(e.target.value)}
-              placeholder="Add reference links (one per line)..."
-              rows={4}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSaveCreativeRef}
-                disabled={savingCreativeRef}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                <Save className="w-4 h-4" />
-                {savingCreativeRef ? "Saving..." : "Save"}
-              </button>
-              <button
-                onClick={() => {
-                  setEditingCreativeRef(false)
-                  setCreativeRef(task.creativeRef || "")
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div>
-            {task.creativeRef ? (
-              <div className="space-y-2">
-                {task.creativeRef.split('\n').map((link, index) => (
-                  link.trim() && (
-                    <a
-                      key={index}
-                      href={link.trim()}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block text-blue-600 hover:underline"
-                    >
-                      {link.trim()}
-                    </a>
-                  )
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400 italic">No creative reference added yet</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Final Creative Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 dark:text-black">
-          <Image className="w-5 h-5 text-green-600" />
-          Final Creative ({finalCreatives.length})
+      {/* Time Tracking Section */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          <Clock className="w-5 h-5 text-blue-600" />
+          Time Tracking
         </h3>
 
-        {(isAssignedDesigner || canManage) && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Estimated Time */}
+          <div className="p-4 bg-blue-50 rounded-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+            <p className="text-sm text-gray-600 mb-1 dark:border-gray-600 dark:bg-gray-800  dark:text-gray-400">Estimated Time</p>
+            {canManage && editingEstimatedTime ? (
+              <div className="flex items-center gap-2">
                 <input
-                  id="final-creative-input"
-                  type="file"
-                  onChange={handleFinalCreativeSelect}
-                  accept="image/*,video/*,.pdf,.psd,.ai"
-                  className="flex-1 text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  defaultValue={task.estimatedTime || 0}
+                  onChange={(e) => handleUpdateEstimatedTime(e.target.value)}
+                  className="w-24 px-2 py-1 border border-blue-500 rounded text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  autoFocus
                 />
-                {finalCreativeFile && (
-                  <button
-                    onClick={() => {
-                      setFinalCreativeFile(null)
-                      document.getElementById("final-creative-input").value = ""
-                    }}
-                    className="p-2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                )}
+                <span className="text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white">hours</span>
+                <button onClick={() => setEditingEstimatedTime(false)} className="text-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+                  <X className="w-4 h-4" />
+                </button>
               </div>
+            ) : (
+              <button
+                onClick={() => canManage && setEditingEstimatedTime(true)}
+                className={`text-2xl font-bold text-blue-600 ${canManage ? 'hover:text-blue-700 cursor-pointer' : ''}`}
+              >
+                {formatTime(task.estimatedTime)}
+                {canManage && <ChevronDown className="w-3 h-3 inline ml-1" />}
+              </button>
+            )}
+          </div>
 
-              {finalCreativeFile && (
-                <>
-                  <input
-                    type="text"
-                    value={finalCreativeDescription}
-                    onChange={(e) => setFinalCreativeDescription(e.target.value)}
-                    placeholder="Add description (optional)"
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                  <button
-                    onClick={handleUploadFinalCreative}
-                    disabled={uploadingFinalCreative}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                  >
-                    <Upload className="w-4 h-4" />
-                    {uploadingFinalCreative ? "Uploading..." : "Upload Final Creative"}
-                  </button>
-                </>
+          {/* Actual Time */}
+          <div className="p-4 bg-green-50 rounded-lg dark:border-gray-600 dark:bg-gray-800 dark:text-white">
+            <p className="text-sm text-gray-600 mb-1 dark:border-gray-600 dark:bg-gray-800  dark:text-gray-400">Actual Time</p>
+            {(isAssignedUser || canManage) && editingActualTime ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  defaultValue={task.actualTime || 0}
+                  onChange={(e) => handleUpdateActualTime(e.target.value)}
+                  className="w-24 px-2 py-1 border border-green-500 rounded text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  autoFocus
+                />
+                <span className="text-sm dark:text-black dark:border-gray-600 dark:bg-gray-700 dark:text-white">hours</span>
+                <button onClick={() => setEditingActualTime(false)} className="text-gray-500">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => (isAssignedUser || canManage) && setEditingActualTime(true)}
+                className={`text-2xl font-bold text-green-600 ${(isAssignedUser || canManage) ? 'hover:text-green-700 cursor-pointer' : ''}`}
+              >
+                {formatTime(task.actualTime)}
+                {(isAssignedUser || canManage) && <ChevronDown className="w-3 h-3 inline ml-1" />}
+              </button>
+            )}
+          </div>
+
+          {/* Time Difference */}
+          <div className={` dark:border-gray-600 dark:bg-gray-800 dark:text-white p-4 rounded-lg ${!task.actualTime || !task.estimatedTime ? 'bg-gray-50' :
+            task.actualTime <= task.estimatedTime ? 'bg-green-50' : 'bg-red-50'
+            }`}>
+            <p className="text-sm text-gray-600 mb-1 dark:border-gray-600 dark:bg-gray-800  dark:text-gray-400">Variance</p>
+            <div className="text-2xl font-bold">
+              {!task.actualTime || !task.estimatedTime ? (
+                <span className="text-gray-400">-</span>
+              ) : (
+                <span className={task.actualTime <= task.estimatedTime ? 'text-green-600' : 'text-red-600'}>
+                  {task.actualTime <= task.estimatedTime ? '✓' : '⚠'}
+                  {' '}{formatTime(Math.abs(task.actualTime - task.estimatedTime))}
+                  {task.actualTime > task.estimatedTime && ' over'}
+                </span>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Upload final designs, images, videos, or files for this post
-            </p>
           </div>
-        )}
+        </div>
 
-        {finalCreatives && finalCreatives.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {finalCreatives.map((creative) => (
-              <div
-                key={creative.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+        {task.contentType && (
+          <p className="text-sm text-gray-500 mt-4 dark:text-gray-400">
+            Content Type: <span className="font-medium">{task.contentType.replace('_', ' ')}</span>
+            {' • '}
+            Default estimate: {formatTime(getDefaultTimeEstimate(task.contentType))}
+          </p>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Copy Idea Section */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-600" />
+              <h3 className="text-lg font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white">Copy Idea / Post Copy</h3>
+            </div>
+            {canEditContent && !editingCopyIdea && (
+              <button
+                onClick={() => setEditingCopyIdea(true)}
+                className="text-sm text-blue-600 hover:text-blue-700"
               >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <span className="text-2xl">{getFileIcon(creative.fileType)}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm truncate">{creative.fileName}</p>
-                    <p className="text-xs text-gray-500">{formatFileSize(creative.fileSize)}</p>
-                    {creative.description && <p className="text-xs text-gray-600 mt-1">{creative.description}</p>}
-                    <p className="text-xs text-gray-400 mt-1">
-                      By {creative.uploadedBy?.firstName} {creative.uploadedBy?.lastName}
-                    </p>
-                  </div>
+                Edit
+              </button>
+            )}
+          </div>
+
+          {editingCopyIdea ? (
+            <div className="space-y-3">
+              <textarea
+                value={copyIdea}
+                onChange={(e) => setCopyIdea(e.target.value)}
+                placeholder="Write your copy idea or post copy here..."
+                rows={6}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSaveCopyIdea}
+                  disabled={savingCopyIdea}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  {savingCopyIdea ? "Saving..." : "Save"}
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingCopyIdea(false)
+                    setCopyIdea(task.copyIdea || "")
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              {task.copyIdea ? (
+                <p className="text-gray-700 whitespace-pre-wrap">{task.copyIdea}</p>
+              ) : (
+                <p className="text-gray-400 italic">No copy idea added yet</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Caption Section */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-lg font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white">Caption</h3>
+            </div>
+            {canEditContent && !editingCaption && (
+              <button
+                onClick={() => setEditingCaption(true)}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+
+          {editingCaption ? (
+            <div className="space-y-3">
+              <textarea
+                value={caption}
+                onChange={(e) => setCaption(e.target.value)}
+                placeholder="Write the final caption for this post..."
+                rows={6}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSaveCaption}
+                  disabled={savingCaption}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  {savingCaption ? "Saving..." : "Save"}
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingCaption(false)
+                    setCaption(task.caption || "")
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              {task.caption ? (
+                <p className="text-gray-700 whitespace-pre-wrap">{task.caption}</p>
+              ) : (
+                <p className="text-gray-400 italic">No caption added yet</p>
+              )}
+            </div>
+          )}
+        </div>
+
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+        {/* Creative Reference Section */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <LinkIcon className="w-5 h-5 text-purple-600" />
+              <h3 className="text-lg font-semibold dark:border-gray-600 dark:bg-gray-700 dark:text-white">Creative Reference</h3>
+            </div>
+            {canEditContent && !editingCreativeRef && (
+              <button
+                onClick={() => setEditingCreativeRef(true)}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+
+          {editingCreativeRef ? (
+            <div className="space-y-3">
+              <textarea
+                value={creativeRef}
+                onChange={(e) => setCreativeRef(e.target.value)}
+                placeholder="Add reference links (one per line)..."
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSaveCreativeRef}
+                  disabled={savingCreativeRef}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  {savingCreativeRef ? "Saving..." : "Save"}
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingCreativeRef(false)
+                    setCreativeRef(task.creativeRef || "")
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors dark:border-gray-600 dark:bg-gray-700 dark:hover:text-black"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              {task.creativeRef ? (
+                <div className="space-y-2">
+                  {task.creativeRef.split('\n').map((link, index) => (
+                    link.trim() && (
+                      <a
+                        key={index}
+                        href={link.trim()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block text-blue-600 hover:underline"
+                      >
+                        {link.trim()}
+                      </a>
+                    )
+                  ))}
                 </div>
-                <div className="flex items-center gap-2">
-                  <a
-                    href={`http://localhost:5000${creative.fileUrl}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                  >
-                    <Download className="w-4 h-4" />
-                  </a>
-                  {(creative.uploadedById === user.id || canManage) && (
+              ) : (
+                <p className="text-gray-400 italic">No creative reference added yet</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Final Creative Section */}
+        <div className="bg-white rounded-lg border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+            <Image className="w-5 h-5 text-green-600" />
+            Final Creative ({finalCreatives.length})
+          </h3>
+
+          {(isAssignedDesigner || canManage) && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-lg dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    id="final-creative-input"
+                    type="file"
+                    onChange={handleFinalCreativeSelect}
+                    accept="image/*,video/*,.pdf,.psd,.ai"
+                    className="flex-1 text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                  />
+                  {finalCreativeFile && (
                     <button
-                      onClick={() => handleDeleteFinalCreative(creative.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      onClick={() => {
+                        setFinalCreativeFile(null)
+                        document.getElementById("final-creative-input").value = ""
+                      }}
+                      className="p-2 text-gray-400 hover:text-gray-600"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <X className="w-5 h-5" />
                     </button>
                   )}
                 </div>
+
+                {finalCreativeFile && (
+                  <>
+                    <input
+                      type="text"
+                      value={finalCreativeDescription}
+                      onChange={(e) => setFinalCreativeDescription(e.target.value)}
+                      placeholder="Add description (optional)"
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 dark:border-gray-600 dark:bg-gray-700  dark:text-gray-400"
+                    />
+                    <button
+                      onClick={handleUploadFinalCreative}
+                      disabled={uploadingFinalCreative}
+                      className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                    >
+                      <Upload className="w-4 h-4" />
+                      {uploadingFinalCreative ? "Uploading..." : "Upload Final Creative"}
+                    </button>
+                  </>
+                )}
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-gray-500 text-center py-8">No final creatives uploaded yet</p>
-        )}
-      </div>
+              <p className="text-xs text-gray-500 mt-2 dark:text-gray-400">
+                Upload final designs, images, videos, or files for this post
+              </p>
+            </div>
+          )}
+
+
+
+
+          {/* {finalCreatives && finalCreatives.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {finalCreatives.map((creative) => (
+                <div
+                  key={creative.id}
+                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50"
+                >
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <span className="text-2xl">{getFileIcon(creative.fileType)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm truncate dark:text-black">{creative.fileName}</p>
+                      <p className="text-xs text-gray-500">{formatFileSize(creative.fileSize)}</p>
+                      {creative.description && <p className="text-xs text-gray-600 mt-1">{creative.description}</p>}
+                      <p className="text-xs text-gray-400 mt-1">
+                        By {creative.uploadedBy?.firstName} {creative.uploadedBy?.lastName}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={`http://localhost:5000${creative.fileUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                    </a>
+                    {(creative.uploadedById === user.id || canManage) && (
+                      <button
+                        onClick={() => handleDeleteFinalCreative(creative.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-8">No final creatives uploaded yet</p>
+          )} */}
+
+          {finalCreatives && finalCreatives.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {finalCreatives.map((creative) => {
+                const fileExt = creative.fileType?.toLowerCase();
+                const fileUrl = `http://localhost:5000${creative.fileUrl}`;
+                const isImage = ['jpeg', 'jpg', 'png', 'gif', 'webp', 'svg'].includes(fileExt);
+                const isVideo = ['mp4', 'mov', 'avi'].includes(fileExt);
+                const isAudio = ['mp3', 'wav'].includes(fileExt);
+                const isPdf = fileExt === 'pdf';
+                const isDoc = ['doc', 'docx'].includes(fileExt);
+                const isSheet = ['xls', 'xlsx'].includes(fileExt);
+                const isPresentation = ['ppt', 'pptx'].includes(fileExt);
+
+                return (
+                  <div
+                    key={creative.id}
+                    className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-white dark:bg-gray-800"
+                  >
+                    {/* Preview Section */}
+                    <div className="relative aspect-video bg-gray-100 dark:bg-gray-900 flex items-center justify-center overflow-hidden">
+                      {isImage ? (
+                        <img
+                          src={fileUrl}
+                          alt={creative.fileName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextElementSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : isVideo ? (
+                        <video
+                          src={fileUrl}
+                          className="w-full h-full object-cover"
+                          controls
+                          preload="metadata"
+                        />
+                      ) : isAudio ? (
+                        <div className="w-full p-4 flex flex-col items-center justify-center gap-3">
+                          <span className="text-5xl">🎵</span>
+                          <audio src={fileUrl} controls className="w-full" />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <span className="text-6xl">
+                            {isPdf && '📄'}
+                            {isDoc && '📝'}
+                            {isSheet && '📊'}
+                            {isPresentation && '📽️'}
+                            {fileExt === 'txt' && '📃'}
+                            {!isPdf && !isDoc && !isSheet && !isPresentation && fileExt !== 'txt' && '📁'}
+                          </span>
+                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                            {fileExt || 'file'}
+                          </span>
+                        </div>
+                      )}
+                      {/* Fallback icon (hidden by default, shown on image error) */}
+                      <div style={{ display: 'none' }} className="flex-col items-center justify-center gap-2">
+                        <span className="text-6xl">{getFileIcon(creative.fileType)}</span>
+                        <span className="text-xs font-medium text-gray-500 uppercase">{fileExt}</span>
+                      </div>
+                    </div>
+
+                    {/* Info Section */}
+                    <div className="p-4">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate dark:text-white" title={creative.fileName}>
+                            {creative.fileName}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {formatFileSize(creative.fileSize)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
+                            title="Download"
+                          >
+                            <Download className="w-4 h-4" />
+                          </a>
+                          {(creative.uploadedById === user.id || canManage) && (
+                            <button
+                              onClick={() => handleDeleteFinalCreative(creative.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {creative.description && (
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-2">
+                          {creative.description}
+                        </p>
+                      )}
+
+                      {/* <div className="flex items-center gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-semibold">
+                {creative.uploadedBy?.firstName?.[0]}
+                {creative.uploadedBy?.lastName?.[0]}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {creative.uploadedBy?.firstName} {creative.uploadedBy?.lastName}
+              </p>
+            </div> */}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 mb-4">
+                <span className="text-3xl">📁</span>
+              </div>
+              <p className="text-gray-500 dark:text-gray-400">No final creatives uploaded yet</p>
+              <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">
+                Upload your first creative to get started
+              </p>
+            </div>
+          )}
+
+        </div>
 
       </div>
-
-
 
       {/* Reference Attachments Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-4 dark:text-black">Reference Attachments ({task.attachments?.length || 0})</h3>
+      <div className="bg-white rounded-lg border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+        <h3 className="text-lg font-semibold mb-4 dark:border-gray-600 dark:bg-gray-700 dark:text-white">Reference Attachments ({task.attachments?.length || 0})</h3>
 
         {canEditContent && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg dark:border-gray-600 dark:bg-gray-700 dark:text-white">
             <div className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
                 <input
                   id="file-input"
                   type="file"
                   onChange={handleFileSelect}
-                  className="flex-1 text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  className="flex-1 text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 />
                 {selectedFile && (
                   <button
@@ -1088,7 +1365,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                     value={fileDescription}
                     onChange={(e) => setFileDescription(e.target.value)}
                     placeholder="Add description (optional)"
-                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400"
                   />
                   <button
                     onClick={handleUploadFile}
@@ -1101,7 +1378,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
                 </>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 mt-2 dark:text-gray-400">
               Upload reference materials, inspirations, or supporting files
             </p>
           </div>
@@ -1149,8 +1426,8 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
       </div>
 
       {/* Comments Section */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold mb-4 dark:text-black">Comments ({task.comments?.length || 0})</h3>
+      <div className="bg-white rounded-lg border border-gray-200 p-6 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
+        <h3 className="text-lg font-semibold mb-4 dark:border-gray-600 dark:bg-gray-700 dark:text-white">Comments ({task.comments?.length || 0})</h3>
 
         <form onSubmit={handleSubmitComment} className="mb-6">
           <div className="flex gap-3">
@@ -1158,7 +1435,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
               value={newComment}
               onChange={setNewComment}
               placeholder="Add a comment... (type @ to mention someone)"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
             <button
               type="submit"
@@ -1169,7 +1446,7 @@ const handleUpdateSocialStatus = async (newSocialStatus) => {
               Send
             </button>
           </div>
-          <p className="text-xs text-gray-500 mt-2">Type @ to mention team members and notify them</p>
+          <p className="text-xs text-gray-500 mt-2 dark:text-gray-400">Type @ to mention team members and notify them</p>
         </form>
 
         {task.comments && task.comments.length > 0 ? (

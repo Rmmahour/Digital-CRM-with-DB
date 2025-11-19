@@ -4,6 +4,8 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import { LogIn } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
+
 
 export default function Login() {
   const [email, setEmail] = useState("")
@@ -12,6 +14,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
   const navigate = useNavigate()
+
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -56,24 +60,36 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="you@example.com"
               />
             </div>
 
-            <div>
+            <div className="relative">
               <label htmlFor="password" className="block text-sm font-medium mb-2">
                 Password
               </label>
               <input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors text-center p-1"
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5 dark:text-black" />
+                ) : (
+                  <Eye className="w-5 h-5 dark:text-black" />
+                )}
+              </button>
             </div>
 
             <div className="flex items-center justify-between">
@@ -91,14 +107,14 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-6 p-4 bg-surface rounded-lg">
+          {/* <div className="mt-6 p-4 bg-surface rounded-lg">
             <p className="text-sm text-text-secondary mb-2 font-medium">Test Accounts:</p>
             <div className="space-y-1 text-xs text-text-secondary">
               <p>Super Admin: superadmin@abacus.com / admin123</p>
               <p>Admin: admin@abacus.com / admin123</p>
               <p>Writer: writer@abacus.com / admin123</p>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

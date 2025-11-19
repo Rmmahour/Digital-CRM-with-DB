@@ -24,6 +24,8 @@ import {
   uploadFinalCreative,
   getFinalCreatives,
   deleteFinalCreative,
+  updateEstimatedTime,
+  updateActualTime
 } from "../controllers/task.controller.js"
 import { authenticate } from "../middleware/auth.middleware.js"
 import { upload } from "../config/upload.js"
@@ -61,5 +63,8 @@ router.patch("/:id/social-status", authenticate, updateSocialStatus)
 router.post("/:taskId/final-creative", authenticate, upload.single("file"), uploadFinalCreative)
 router.get("/:taskId/final-creatives", authenticate, getFinalCreatives)
 router.delete("/final-creative/:creativeId", authenticate, deleteFinalCreative)
+
+router.patch("/:id/estimated-time", authenticate, updateEstimatedTime)
+router.patch("/:id/actual-time", authenticate, updateActualTime)
 
 export default router

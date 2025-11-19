@@ -117,7 +117,7 @@ export default function DesignerDashboard() {
           </div>
         </div> */}
 
-          <TeamActivityWidget />
+          {/* <TeamActivityWidget /> */}
 
       </div>
     </div>

@@ -8,10 +8,15 @@ import {
   updateUserStatus,
 } from "../controllers/user.controller.js"
 import { authenticate, authorize } from "../middleware/auth.middleware.js"
+import { upload } from "../config/upload.js";
+import { uploadProfileImage } from "../controllers/upload.controller.js";
 
 const router = express.Router()
 
 router.use(authenticate)
+
+router.post("/upload-profile", upload.single("avatar"), uploadProfileImage);
+
 
 router.get("/", getAllUsers)
 router.get("/:id", getUserById)

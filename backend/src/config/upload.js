@@ -38,7 +38,7 @@ const memoryStorage = multer.memoryStorage()
 
 // File filter
 const fileFilter = (req, file, cb) => {
-  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|xls|xlsx|ppt|pptx|txt|mp4|mov|avi|mp3|wav/
+  const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|xls|xlsx|ppt|pptx|txt|mp4|mov|avi|mp3|wav|svg|webp/
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
   const mimetype = allowedTypes.test(file.mimetype)
 
@@ -57,7 +57,7 @@ const storage =
 export const upload = multer({
   storage,
   limits: {
-    fileSize: Number.parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024, // 10MB default
+    fileSize: Number.parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024 * 1024, // 10GB default
   },
   fileFilter,
 })
