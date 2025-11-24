@@ -25,6 +25,8 @@ const upload = multer({
   fileFilter: (req, file, cb) => {
     const allowedMimes = [
       "image/jpeg",
+      "image/webp",
+      "image/svg",
       "image/png",
       "image/gif",
       "video/mp4",
@@ -73,11 +75,16 @@ router.post("/rooms", chatController.getOrCreateChatRoom)
 // Create group chat (for ChatPage)
 router.post("/rooms/group", chatController.createGroupChat)
 
+router.delete("/rooms/:roomId", chatController.deleteChatRoom)
+
 // Get messages for a chat room (for ChatPage)
 router.get("/rooms/:roomId/messages", chatController.getChatMessages)
 
 // Send message to a chat room (for ChatPage)
 router.post("/rooms/:roomId/messages", chatController.sendMessage)
+
+// delete single message (soft delete)
+router.delete("/rooms/:roomId/messages/:messageId", chatController.deleteMessage)
 
 // Mark message as read
 router.post("/messages/:messageId/read", chatController.markAsRead)

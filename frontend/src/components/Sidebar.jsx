@@ -92,19 +92,19 @@ export default function Sidebar() {
       <div className="p-4 border-t border-border">
         <div className="flex bg-surface rounded-lg gap-2 py-4 items-center">
           {user?.avatar ? (
-              <img
-                src={user.avatar}
-                alt={user.firstName || "User"}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-            ) : (
-              <User className="w-12 h-12 text-blue-600 bg-gray-400 rounded-full p-2" />
-            )}
+            <img
+              src={user.avatar}
+              alt={user.firstName || "User"}
+              className="w-12 h-12 rounded-full object-cover"
+            />
+          ) : (
+            <User className="w-12 h-12 text-blue-600 bg-gray-400 rounded-full p-2" />
+          )}
           <div className="text-sm font-medium items-center gap-2 text-xl">
             <p>{user?.firstName} {user?.lastName}</p>
             <p className="text-xs text-text-secondary">{user?.email}</p>
           </div>
-          
+
         </div>
         <button
           onClick={logout}

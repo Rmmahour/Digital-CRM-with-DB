@@ -13,6 +13,15 @@ export const AuthProvider = ({ children }) => {
     checkAuth()
   }, [])
 
+  const processUserData = (userData) => {
+    if (!userData) return null
+    
+    return {
+      ...userData,
+      avatar: userData.avatar ? getMediaUrl(userData.avatar) : null,
+    }
+  }
+
   const checkAuth = async () => {
     const token = localStorage.getItem("token")
     if (token) {
@@ -48,7 +57,7 @@ export const AuthProvider = ({ children }) => {
   const refreshUser = async () => {
     try {
       const userData = await authAPI.getMe()
-      setUser(userData)
+      setUser(processUserData(userData))
       console.log("User data refreshed:", userData)
       return userData
     } catch (error) {

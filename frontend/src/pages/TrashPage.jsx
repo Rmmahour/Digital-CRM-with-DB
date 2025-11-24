@@ -14,9 +14,10 @@ export default function TrashPage() {
     tasks: []
   })
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState("all") // 'all', 'brand', 'user', 'task'
+  const [filter, setFilter] = useState("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedItems, setSelectedItems] = useState([])
+  const [isProcessing, setIsProcessing] = useState(false)
 
   useEffect(() => {
     loadTrash()
@@ -26,10 +27,31 @@ export default function TrashPage() {
     try {
       setLoading(true)
       const data = await trashAPI.getAll(filter === "all" ? null : filter)
-      setTrashedItems(data)
+      
+      // Ensure data has the correct structure
+      setTrashedItems({
+        brands: data.brands || [],
+        users: data.users || [],
+        tasks: data.tasks || []
+      })
     } catch (error) {
-      console.error("[v0] Failed to load trash:", error)
-      alert("Failed to load trash")
+      console.error("[TrashPage] Failed to load trash:", error)
+      
+      // Set empty state on error
+      setTrashedItems({
+        brands: [],
+        users: [],
+        tasks: []
+      })
+      
+      // More specific error messages
+      if (error.response?.status === 403) {
+        alert("You don't have permission to view trash")
+      } else if (error.response?.status === 500) {
+        alert("Server error. Please try again later.")
+      } else {
+        alert("Failed to load trash items")
+      }
     } finally {
       setLoading(false)
     }
@@ -38,42 +60,78 @@ export default function TrashPage() {
   const handleRestore = async (type, id, name) => {
     if (!confirm(`Are you sure you want to restore this ${type}: ${name}?`)) return
 
+    setIsProcessing(true)
     try {
-      await trashAPI.restore(type, id)
-      alert(`${type} restored successfully!`)
-      loadTrash()
+      const response = await trashAPI.restore(type, id)
+      
+      console.log(`[TrashPage] Restore ${type} response:`, response) // Debug log
+      
+      // Handle response - backend might return different formats
+      if (response) {
+        alert(`${type.charAt(0).toUpperCase() + type.slice(1)} restored successfully!`)
+        await loadTrash() // Reload the trash items
+      }
     } catch (error) {
-      console.error(`[v0] Failed to restore ${type}:`, error)
-      alert(`Failed to restore ${type}`)
+      console.error(`[TrashPage] Failed to restore ${type}:`, error)
+      
+      // Handle specific error cases
+      if (error.response?.status === 404) {
+        alert(`${type} not found in trash`)
+      } else if (error.response?.status === 403) {
+        alert(`You don't have permission to restore this ${type}`)
+      } else if (error.response?.status === 400) {
+        alert(error.response?.data?.message || `Invalid ${type} data`)
+      } else {
+        alert(error.response?.data?.message || `Failed to restore ${type}`)
+      }
+    } finally {
+      setIsProcessing(false)
     }
   }
 
   const handlePermanentDelete = async (type, id, name) => {
+    // Check permissions
     if (user.role !== "SUPER_ADMIN") {
       alert("Only Super Admin can permanently delete items")
       return
     }
 
+    // Double confirmation for permanent delete
     if (!confirm(`⚠️ PERMANENT DELETE\n\nAre you absolutely sure you want to permanently delete this ${type}: ${name}?\n\nThis action CANNOT be undone!`)) {
       return
     }
 
-    // Double confirmation for permanent delete
     if (!confirm("This is your final warning. The item will be deleted forever. Continue?")) {
       return
     }
 
+    setIsProcessing(true)
     try {
-      await trashAPI.permanentlyDelete(type, id)
-      alert(`${type} permanently deleted`)
-      loadTrash()
+      const response = await trashAPI.permanentlyDelete(type, id)
+      
+      console.log(`[TrashPage] Permanent delete ${type} response:`, response) // Debug log
+      
+      if (response) {
+        alert(`${type.charAt(0).toUpperCase() + type.slice(1)} permanently deleted`)
+        await loadTrash()
+      }
     } catch (error) {
-      console.error(`[v0] Failed to permanently delete ${type}:`, error)
-      alert(`Failed to permanently delete ${type}`)
+      console.error(`[TrashPage] Failed to permanently delete ${type}:`, error)
+      
+      if (error.response?.status === 403) {
+        alert("You don't have permission to permanently delete items")
+      } else if (error.response?.status === 404) {
+        alert(`${type} not found`)
+      } else {
+        alert(error.response?.data?.message || `Failed to permanently delete ${type}`)
+      }
+    } finally {
+      setIsProcessing(false)
     }
   }
 
   const handleEmptyTrash = async () => {
+    // Check permissions
     if (user.role !== "SUPER_ADMIN") {
       alert("Only Super Admin can empty trash")
       return
@@ -83,25 +141,60 @@ export default function TrashPage() {
       return
     }
 
+    setIsProcessing(true)
     try {
       const result = await trashAPI.emptyTrash()
-      alert(`Trash emptied successfully!\n\nDeleted:\n- ${result.deleted.brands} brands\n- ${result.deleted.users} users\n- ${result.deleted.tasks} tasks`)
-      loadTrash()
+      
+      // Backend returns: {message: string, deleted: {brands: n, users: n, tasks: n}}
+      if (result && result.deleted) {
+        const { brands = 0, users = 0, tasks = 0 } = result.deleted
+        const totalDeleted = brands + users + tasks
+        
+        if (totalDeleted > 0) {
+          alert(`✅ Trash emptied successfully!\n\nPermanently deleted:\n• ${brands} brand${brands !== 1 ? 's' : ''}\n• ${users} user${users !== 1 ? 's' : ''}\n• ${tasks} task${tasks !== 1 ? 's' : ''}`)
+        } else {
+          alert("ℹ️ No items were deleted\n\nOnly items that have been in trash for more than 14 days can be permanently deleted.\n\nAll current items are still within the 14-day retention period.")
+        }
+        
+        // Reload even if nothing was deleted, to refresh the UI
+        await loadTrash()
+      } else if (result && result.message) {
+        // Fallback if structure is different
+        alert(result.message)
+        await loadTrash()
+      }
     } catch (error) {
-      console.error("[v0] Failed to empty trash:", error)
-      alert("Failed to empty trash")
+      console.error("[TrashPage] Failed to empty trash:", error)
+      
+      if (error.response?.status === 403) {
+        alert("❌ Access Denied\n\nOnly Super Admin can empty trash")
+      } else if (error.response?.data?.message) {
+        alert(`❌ Error: ${error.response.data.message}`)
+      } else {
+        alert("❌ Failed to empty trash\n\nPlease try again or contact support if the issue persists.")
+      }
+    } finally {
+      setIsProcessing(false)
     }
   }
 
   const getDaysRemaining = (deletedAt) => {
-    const deleteDate = new Date(deletedAt)
-    const expiryDate = new Date(deleteDate.getTime() + 14 * 24 * 60 * 60 * 1000)
-    const now = new Date()
-    const daysLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24))
-    return daysLeft > 0 ? daysLeft : 0
+    if (!deletedAt) return 0
+    
+    try {
+      const deleteDate = new Date(deletedAt)
+      const expiryDate = new Date(deleteDate.getTime() + 14 * 24 * 60 * 60 * 1000)
+      const now = new Date()
+      const daysLeft = Math.ceil((expiryDate - now) / (1000 * 60 * 60 * 24))
+      return daysLeft > 0 ? daysLeft : 0
+    } catch (error) {
+      console.error("Error calculating days remaining:", error)
+      return 0
+    }
   }
 
   const filterItems = (items, type) => {
+    if (!items || !Array.isArray(items)) return []
     if (!searchQuery) return items
 
     return items.filter(item => {
@@ -134,7 +227,14 @@ export default function TrashPage() {
   }
 
   if (loading) {
-    return <div className="text-center py-12">Loading trash...</div>
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading trash items...</p>
+        </div>
+      </div>
+    )
   }
 
   const totalItems = getTotalCount()
@@ -155,10 +255,15 @@ export default function TrashPage() {
         {user.role === "SUPER_ADMIN" && totalItems > 0 && (
           <button
             onClick={handleEmptyTrash}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            disabled={isProcessing}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              isProcessing 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-red-600 hover:bg-red-700'
+            } text-white`}
           >
             <Trash2 className="w-5 h-5" />
-            Empty Trash
+            {isProcessing ? 'Processing...' : 'Empty Trash'}
           </button>
         )}
       </div>
@@ -167,7 +272,7 @@ export default function TrashPage() {
       <div className="bg-background rounded-lg border border-border p-6">
         <div className="flex items-center gap-4 mb-6">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary  dark:border-gray-600 dark:bg-gray-700 dark:text-white" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
             <input
               type="text"
               placeholder="Search trash..."
@@ -182,6 +287,7 @@ export default function TrashPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => setFilter("all")}
+            disabled={loading}
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === "all"
                 ? "bg-primary text-white"
@@ -192,6 +298,7 @@ export default function TrashPage() {
           </button>
           <button
             onClick={() => setFilter("brand")}
+            disabled={loading}
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === "brand"
                 ? "bg-primary text-white"
@@ -202,6 +309,7 @@ export default function TrashPage() {
           </button>
           <button
             onClick={() => setFilter("user")}
+            disabled={loading}
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === "user"
                 ? "bg-primary text-white"
@@ -212,6 +320,7 @@ export default function TrashPage() {
           </button>
           <button
             onClick={() => setFilter("task")}
+            disabled={loading}
             className={`px-4 py-2 rounded-lg transition-colors ${
               filter === "task"
                 ? "bg-primary text-white"
@@ -250,7 +359,7 @@ export default function TrashPage() {
                 <div className="flex-1">
                   <h3 className="font-medium">{brand.name}</h3>
                   <p className="text-sm text-text-secondary">
-                    Deleted {format(new Date(brand.deletedAt), "MMM d, yyyy")} by{" "}
+                    Deleted {brand.deletedAt ? format(new Date(brand.deletedAt), "MMM d, yyyy") : "Unknown date"} by{" "}
                     {brand.deleter?.firstName} {brand.deleter?.lastName}
                   </p>
                   <p className="text-xs text-text-secondary mt-1">
@@ -271,7 +380,12 @@ export default function TrashPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleRestore("brand", brand.id, brand.name)}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      disabled={isProcessing}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-white ${
+                        isProcessing 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      }`}
                       title="Restore"
                     >
                       <RotateCcw className="w-4 h-4" />
@@ -280,7 +394,12 @@ export default function TrashPage() {
                     {user.role === "SUPER_ADMIN" && (
                       <button
                         onClick={() => handlePermanentDelete("brand", brand.id, brand.name)}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        disabled={isProcessing}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-white ${
+                          isProcessing 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-red-600 hover:bg-red-700'
+                        }`}
                         title="Permanently Delete"
                       >
                         <XCircle className="w-4 h-4" />
@@ -311,7 +430,7 @@ export default function TrashPage() {
                   </h3>
                   <p className="text-sm text-text-secondary">{userItem.email}</p>
                   <p className="text-xs text-text-secondary mt-1">
-                    Role: {userItem.role} • Deleted {format(new Date(userItem.deletedAt), "MMM d, yyyy")} by{" "}
+                    Role: {userItem.role} • Deleted {userItem.deletedAt ? format(new Date(userItem.deletedAt), "MMM d, yyyy") : "Unknown date"} by{" "}
                     {userItem.deleter?.firstName} {userItem.deleter?.lastName}
                   </p>
                 </div>
@@ -329,7 +448,12 @@ export default function TrashPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleRestore("user", userItem.id, `${userItem.firstName} ${userItem.lastName}`)}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      disabled={isProcessing}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-white ${
+                        isProcessing 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      }`}
                       title="Restore"
                     >
                       <RotateCcw className="w-4 h-4" />
@@ -338,7 +462,12 @@ export default function TrashPage() {
                     {user.role === "SUPER_ADMIN" && (
                       <button
                         onClick={() => handlePermanentDelete("user", userItem.id, `${userItem.firstName} ${userItem.lastName}`)}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        disabled={isProcessing}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-white ${
+                          isProcessing 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-red-600 hover:bg-red-700'
+                        }`}
                         title="Permanently Delete"
                       >
                         <XCircle className="w-4 h-4" />
@@ -366,7 +495,7 @@ export default function TrashPage() {
                 <div className="flex-1">
                   <h3 className="font-medium">{task.title}</h3>
                   <p className="text-sm text-text-secondary">
-                    Brand: {task.brand?.name} • Deleted {format(new Date(task.deletedAt), "MMM d, yyyy")} by{" "}
+                    Brand: {task.brand?.name} • Deleted {task.deletedAt ? format(new Date(task.deletedAt), "MMM d, yyyy") : "Unknown date"} by{" "}
                     {task.deleter?.firstName} {task.deleter?.lastName}
                   </p>
                   {task.description && (
@@ -389,7 +518,12 @@ export default function TrashPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleRestore("task", task.id, task.title)}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      disabled={isProcessing}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-white ${
+                        isProcessing 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-green-600 hover:bg-green-700'
+                      }`}
                       title="Restore"
                     >
                       <RotateCcw className="w-4 h-4" />
@@ -398,7 +532,12 @@ export default function TrashPage() {
                     {user.role === "SUPER_ADMIN" && (
                       <button
                         onClick={() => handlePermanentDelete("task", task.id, task.title)}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        disabled={isProcessing}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors text-white ${
+                          isProcessing 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : 'bg-red-600 hover:bg-red-700'
+                        }`}
                         title="Permanently Delete"
                       >
                         <XCircle className="w-4 h-4" />

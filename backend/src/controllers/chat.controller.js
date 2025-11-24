@@ -64,6 +64,9 @@ export const getOrCreateChatRoom = async (req, res) => {
                 email: true,
                 role: true,
                 isActive: true,
+                avatar: true,    // ✅ ADD
+                isOnline: true,  // ✅ ADD (if you use this)
+                lastSeenAt: true // ✅ ADD
               },
             },
           },
@@ -87,7 +90,7 @@ export const getOrCreateChatRoom = async (req, res) => {
 
     if (existingRoom) {
       console.log("[Chat Controller] Found existing room:", existingRoom.id)
-      
+
       // Calculate unread count
       const unreadCount = await prisma.chatMessage.count({
         where: {
@@ -112,12 +115,10 @@ export const getOrCreateChatRoom = async (req, res) => {
     // Create new chat room
     const chatRoom = await prisma.chatRoom.create({
       data: {
-        isGroup: false,
+        name,
+        isGroup: true,
         members: {
-          create: [
-            { userId: currentUserId },
-            { userId: userId }
-          ],
+          create: allMemberIds.map((userId) => ({ userId })),
         },
       },
       include: {
@@ -131,6 +132,9 @@ export const getOrCreateChatRoom = async (req, res) => {
                 email: true,
                 role: true,
                 isActive: true,
+                avatar: true,    // ✅ ADD
+                isOnline: true,  // ✅ ADD (if you use this)
+                lastSeenAt: true // ✅ ADD
               },
             },
           },
@@ -149,8 +153,8 @@ export const getOrCreateChatRoom = async (req, res) => {
     console.error("[Chat Controller] Get/create chat room error:", error)
     console.error("[Chat Controller] Error message:", error.message)
     console.error("[Chat Controller] Error stack:", error.stack)
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       message: "Failed to get or create chat room",
       error: error.message,
       details: process.env.NODE_ENV === 'development' ? error.stack : undefined
@@ -219,9 +223,9 @@ export const createGroupChat = async (req, res) => {
     })
   } catch (error) {
     console.error("[Chat Controller] Create group chat error:", error)
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to create group chat",
-      error: error.message 
+      error: error.message
     })
   }
 }
@@ -273,7 +277,7 @@ export const getConversations = async (req, res) => {
           },
         },
       },
-      orderBy: { 
+      orderBy: {
         lastMessageAt: "desc", // ✅ Sort by most recent
       },
     })
@@ -290,9 +294,9 @@ export const getConversations = async (req, res) => {
     res.json(conversations)
   } catch (error) {
     console.error("[Chat Controller] Get conversations error:", error)
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to get conversations",
-      error: error.message 
+      error: error.message
     })
   }
 }
@@ -323,6 +327,9 @@ export const getMyChatRooms = async (req, res) => {
                 email: true,
                 role: true,
                 isActive: true,
+                avatar: true,    // ✅
+                isOnline: true,  // ✅
+                lastSeenAt: true // ✅ (if these fields exist)
               },
             },
           },
@@ -379,9 +386,9 @@ export const getMyChatRooms = async (req, res) => {
     res.json(roomsWithUnread)
   } catch (error) {
     console.error("[Chat Controller] Get chat rooms error:", error)
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to fetch chat rooms",
-      error: error.message 
+      error: error.message
     })
   }
 }
@@ -431,6 +438,18 @@ export const getChatMessages = async (req, res) => {
             role: true,
           },
         },
+        media: true, // ✅ ADD THIS - Include media attachments
+        reactions: {  // ✅ ADD THIS - Include reactions
+          include: {
+            user: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
+        },
         readReceipts: {
           include: {
             user: {
@@ -450,9 +469,9 @@ export const getChatMessages = async (req, res) => {
     res.json(messages.reverse())
   } catch (error) {
     console.error("[Chat Controller] Get messages error:", error)
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to fetch messages",
-      error: error.message 
+      error: error.message
     })
   }
 }
@@ -522,7 +541,7 @@ export const sendMessage = async (req, res) => {
     // ✅ Update chat room's lastMessage and lastMessageAt
     await prisma.chatRoom.update({
       where: { id: chatRoomId },
-      data: { 
+      data: {
         updatedAt: new Date(),
         lastMessageAt: new Date(),
         lastMessageId: message.id,
@@ -590,9 +609,9 @@ export const sendMessage = async (req, res) => {
     res.status(201).json(message)
   } catch (error) {
     console.error("[Chat Controller] Send message error:", error)
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to send message",
-      error: error.message 
+      error: error.message
     })
   }
 }
@@ -608,7 +627,7 @@ export const markAsRead = async (req, res) => {
     // Get message details
     const message = await prisma.chatMessage.findUnique({
       where: { id: messageId },
-      select: { 
+      select: {
         chatRoomId: true,
         senderId: true,
       },
@@ -684,15 +703,15 @@ export const markAsRead = async (req, res) => {
       console.log("[Chat Controller] Emitted message-read event")
     }
 
-    res.json({ 
+    res.json({
       message: "Marked as read",
       receipt,
     })
   } catch (error) {
     console.error("[Chat Controller] Mark as read error:", error)
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to mark as read",
-      error: error.message 
+      error: error.message
     })
   }
 }
@@ -755,15 +774,15 @@ export const markConversationAsRead = async (req, res) => {
       })
     }
 
-    res.json({ 
+    res.json({
       message: "All messages marked as read",
       count: unreadMessages.length,
     })
   } catch (error) {
     console.error("[Chat Controller] Mark all as read error:", error)
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to mark all as read",
-      error: error.message 
+      error: error.message
     })
   }
 }
@@ -800,9 +819,9 @@ export const updateTypingStatus = async (req, res) => {
     res.json({ message: "Typing status updated" })
   } catch (error) {
     console.error("[Chat Controller] Update typing status error:", error)
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to update typing status",
-      error: error.message 
+      error: error.message
     })
   }
 }
@@ -860,9 +879,9 @@ export const uploadChatMedia = async (req, res) => {
     res.status(201).json(media)
   } catch (error) {
     console.error("[Chat Controller] Upload media error:", error)
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to upload media",
-      error: error.message 
+      error: error.message
     })
   }
 }
@@ -909,9 +928,9 @@ export const addReaction = async (req, res) => {
     res.status(201).json(reaction)
   } catch (error) {
     console.error("[Chat Controller] Add reaction error:", error)
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to add reaction",
-      error: error.message 
+      error: error.message
     })
   }
 }
@@ -948,9 +967,172 @@ export const removeReaction = async (req, res) => {
     res.json({ message: "Reaction removed" })
   } catch (error) {
     console.error("[Chat Controller] Remove reaction error:", error)
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Failed to remove reaction",
-      error: error.message 
+      error: error.message
+    })
+  }
+}
+
+// In your chat.controller.js - UPDATE THIS
+export const deleteMessage = async (req, res) => {
+  try {
+    const { roomId, messageId } = req.params // Get from URL params, not body
+    const currentUserId = req.user.id
+
+    // Verify message exists and belongs to current user
+    const message = await prisma.chatMessage.findUnique({
+      where: { id: messageId },
+      select: { id: true, senderId: true, chatRoomId: true }
+    })
+
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" })
+    }
+
+    if (message.chatRoomId !== roomId) {
+      return res.status(400).json({ message: "Message does not belong to this room" })
+    }
+
+    if (message.senderId !== currentUserId) {
+      return res.status(403).json({ message: "You can only delete your own messages" })
+    }
+
+    // Delete all reactions & read receipts first
+    await prisma.messageReaction.deleteMany({ where: { messageId } })
+    await prisma.readReceipt.deleteMany({ where: { messageId } })
+
+    // Delete media
+    await prisma.chatMedia.deleteMany({ where: { messageId } })
+
+    // Now delete the message
+    await prisma.chatMessage.delete({ where: { id: messageId } })
+
+    // Notify all users in the room through socket.io
+    const io = req.app.get("io")
+    if (io) {
+      io.to(`chat-${roomId}`).emit("message-deleted", {
+        messageId,
+        userId: currentUserId,
+      })
+    }
+
+    res.json({ message: "Message deleted successfully", messageId })
+
+  } catch (error) {
+    console.error("[Chat Controller] Delete message error:", error)
+    res.status(500).json({
+      message: "Failed to delete message",
+      error: error.message,
+    })
+  }
+}
+
+
+export const deleteChatRoom = async (req, res) => {
+  try {
+    const { roomId } = req.params
+    const currentUserId = req.user.id
+
+    console.log("[Chat Controller] Delete chat room:", roomId, "by user:", currentUserId)
+
+    // Verify room exists
+    const room = await prisma.chatRoom.findUnique({
+      where: { id: roomId },
+      include: {
+        members: true,
+        messages: {
+          include: {
+            media: true,
+            reactions: true,
+            readReceipts: true,
+          },
+        },
+      },
+    })
+
+    if (!room) {
+      return res.status(404).json({ message: "Chat room not found" })
+    }
+
+    // Verify user is a member of this room
+    const isMember = room.members.some((m) => m.userId === currentUserId)
+    if (!isMember) {
+      return res.status(403).json({ message: "You are not a member of this chat room" })
+    }
+
+    // For group chats, check if user is the creator (optional - you can allow any member to delete)
+    if (room.isGroup && room.createdById && room.createdById !== currentUserId) {
+      return res.status(403).json({
+        message: "Only the group creator can delete this chat room"
+      })
+    }
+
+    // Delete in order (due to foreign key constraints):
+    // 1. Reactions
+    // 2. Read receipts
+    // 3. Media
+    // 4. Messages
+    // 5. Members
+    // 6. Room
+
+    const messageIds = room.messages.map((m) => m.id)
+
+    if (messageIds.length > 0) {
+      // Delete all reactions
+      await prisma.messageReaction.deleteMany({
+        where: { messageId: { in: messageIds } },
+      })
+
+      // Delete all read receipts
+      await prisma.readReceipt.deleteMany({
+        where: { messageId: { in: messageIds } },
+      })
+
+      // Delete all media
+      await prisma.chatMedia.deleteMany({
+        where: { messageId: { in: messageIds } },
+      })
+
+      // Delete all messages
+      await prisma.chatMessage.deleteMany({
+        where: { id: { in: messageIds } },
+      })
+    }
+
+    // Delete all room members
+    await prisma.chatRoomMember.deleteMany({
+      where: { chatRoomId: roomId },
+    })
+
+    // Finally, delete the room itself
+    await prisma.chatRoom.delete({
+      where: { id: roomId },
+    })
+
+    // Notify all members via socket
+    const io = req.app.get("io")
+    if (io) {
+      room.members.forEach((member) => {
+        io.to(`user-${member.userId}`).emit("room-deleted", {
+          roomId,
+          deletedBy: currentUserId,
+        })
+      })
+    }
+
+    console.log("[Chat Controller] Chat room deleted successfully:", roomId)
+
+    res.json({
+      message: "Chat room deleted successfully",
+      roomId,
+      messagesDeleted: messageIds.length,
+    })
+  } catch (error) {
+    console.error("[Chat Controller] Delete chat room error:", error)
+    res.status(500).json({
+      message: "Failed to delete chat room",
+      error: error.message,
     })
   }
 }
